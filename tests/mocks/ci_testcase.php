@@ -1,11 +1,13 @@
 <?php
 
+#[\AllowDynamicProperties]
 class CI_TestCase extends \PHPUnit\Framework\TestCase {
 
 	public $ci_vfs_root;
 	public $ci_app_root;
 	public $ci_base_root;
 	public $ci_readonly_dir;
+	public $ci_view_root;
 	protected $ci_instance;
 	protected static $ci_test_instance;
 
@@ -33,7 +35,7 @@ class CI_TestCase extends \PHPUnit\Framework\TestCase {
 
 	// --------------------------------------------------------------------
 
-	public function setUp()
+	public function setUp(): void
 	{
 		// Setup VFS with base directories
 		$this->ci_vfs_root = vfsStream::setup('');
@@ -50,7 +52,7 @@ class CI_TestCase extends \PHPUnit\Framework\TestCase {
 
 	// --------------------------------------------------------------------
 
-	public function tearDown()
+	public function tearDown(): void
 	{
 		if (method_exists($this, 'tear_down'))
 		{
