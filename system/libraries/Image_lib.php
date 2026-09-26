@@ -840,8 +840,8 @@ class CI_Image_lib {
 		}
 
 		// Kill the file handles
-		imagedestroy($dst_img);
-		imagedestroy($src_img);
+		PHP_VERSION_ID < 80000 && imagedestroy($dst_img);
+		PHP_VERSION_ID < 80000 && imagedestroy($src_img);
 
 		if ($this->dynamic_output !== TRUE)
 		{
@@ -1049,8 +1049,8 @@ class CI_Image_lib {
 		}
 
 		// Kill the file handles
-		imagedestroy($dst_img);
-		imagedestroy($src_img);
+		PHP_VERSION_ID < 80000 && imagedestroy($dst_img);
+		PHP_VERSION_ID < 80000 && imagedestroy($src_img);
 
 		chmod($this->full_dst_path, $this->file_permissions);
 
@@ -1128,7 +1128,7 @@ class CI_Image_lib {
 		}
 
 		// Kill the file handles
-		imagedestroy($src_img);
+		PHP_VERSION_ID < 80000 && imagedestroy($src_img);
 
 		chmod($this->full_dst_path, $this->file_permissions);
 
@@ -1258,8 +1258,8 @@ class CI_Image_lib {
 			return FALSE;
 		}
 
-		imagedestroy($src_img);
-		imagedestroy($wm_img);
+		PHP_VERSION_ID < 80000 && imagedestroy($src_img);
+		PHP_VERSION_ID < 80000 && imagedestroy($wm_img);
 
 		return TRUE;
 	}
@@ -1429,7 +1429,7 @@ class CI_Image_lib {
 			$this->image_save_gd($src_img);
 		}
 
-		imagedestroy($src_img);
+		PHP_VERSION_ID < 80000 && imagedestroy($src_img);
 
 		return TRUE;
 	}

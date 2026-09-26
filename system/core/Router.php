@@ -192,7 +192,7 @@ class CI_Router {
 			// If the directory is set at this time, it means an override exists, so skip the checks
 			if ( ! isset($this->directory))
 			{
-				$_d = $this->config->item('directory_trigger');
+				$_d = (string) $this->config->item('directory_trigger');
 				$_d = isset($_GET[$_d]) ? trim($_GET[$_d], " \t\n\r\0\x0B/") : '';
 
 				if ($_d !== '')
@@ -202,13 +202,13 @@ class CI_Router {
 				}
 			}
 
-			$_c = trim($this->config->item('controller_trigger'));
+			$_c = trim((string) $this->config->item('controller_trigger'));
 			if ( ! empty($_GET[$_c]))
 			{
 				$this->uri->filter_uri($_GET[$_c]);
 				$this->set_class($_GET[$_c]);
 
-				$_f = trim($this->config->item('function_trigger'));
+				$_f = trim((string) $this->config->item('function_trigger'));
 				if ( ! empty($_GET[$_f]))
 				{
 					$this->uri->filter_uri($_GET[$_f]);

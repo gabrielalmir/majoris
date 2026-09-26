@@ -19,6 +19,11 @@
 			"phpunit --color=always --coverage-text --configuration tests/travis/sqlite.phpunit.xml"
 		]
 	},
+	"config": {
+		"platform": {
+			"php": "7.4.33"
+		}
+	},
 	"require-dev": {
 		"mikey179/vfsstream": "^1.6.12",
 		"phpunit/phpunit": "^9.6"

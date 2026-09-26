@@ -143,34 +143,34 @@ class CI_DB_pdo_mysql_driver extends CI_DB_pdo_driver {
 
 			if ( ! empty($sql))
 			{
-				if (empty($this->options[PDO::MYSQL_ATTR_INIT_COMMAND]))
+				if (empty($this->options[$this->_mysql_attr('INIT_COMMAND')]))
 				{
-					$this->options[PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET SESSION sql_mode = '.$sql;
+					$this->options[$this->_mysql_attr('INIT_COMMAND')] = 'SET SESSION sql_mode = '.$sql;
 				}
 				else
 				{
-					$this->options[PDO::MYSQL_ATTR_INIT_COMMAND] .= ', @@session.sql_mode = '.$sql;
+					$this->options[$this->_mysql_attr('INIT_COMMAND')] .= ', @@session.sql_mode = '.$sql;
 				}
 			}
 		}
 
 		if ($this->compress === TRUE)
 		{
-			$this->options[PDO::MYSQL_ATTR_COMPRESS] = TRUE;
+			$this->options[$this->_mysql_attr('COMPRESS')] = TRUE;
 		}
 
 		if (is_array($this->encrypt))
 		{
 			$ssl = array();
-			empty($this->encrypt['ssl_key'])    OR $ssl[PDO::MYSQL_ATTR_SSL_KEY]    = $this->encrypt['ssl_key'];
-			empty($this->encrypt['ssl_cert'])   OR $ssl[PDO::MYSQL_ATTR_SSL_CERT]   = $this->encrypt['ssl_cert'];
-			empty($this->encrypt['ssl_ca'])     OR $ssl[PDO::MYSQL_ATTR_SSL_CA]     = $this->encrypt['ssl_ca'];
-			empty($this->encrypt['ssl_capath']) OR $ssl[PDO::MYSQL_ATTR_SSL_CAPATH] = $this->encrypt['ssl_capath'];
-			empty($this->encrypt['ssl_cipher']) OR $ssl[PDO::MYSQL_ATTR_SSL_CIPHER] = $this->encrypt['ssl_cipher'];
+			empty($this->encrypt['ssl_key'])    OR $ssl[$this->_mysql_attr('SSL_KEY')]    = $this->encrypt['ssl_key'];
+			empty($this->encrypt['ssl_cert'])   OR $ssl[$this->_mysql_attr('SSL_CERT')]   = $this->encrypt['ssl_cert'];
+			empty($this->encrypt['ssl_ca'])     OR $ssl[$this->_mysql_attr('SSL_CA')]     = $this->encrypt['ssl_ca'];
+			empty($this->encrypt['ssl_capath']) OR $ssl[$this->_mysql_attr('SSL_CAPATH')] = $this->encrypt['ssl_capath'];
+			empty($this->encrypt['ssl_cipher']) OR $ssl[$this->_mysql_attr('SSL_CIPHER')] = $this->encrypt['ssl_cipher'];
 
-			if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') && isset($this->encrypt['ssl_verify']))
+			if (($attr = $this->_mysql_attr('SSL_VERIFY_SERVER_CERT')) !== NULL && isset($this->encrypt['ssl_verify']))
 			{
-				$ssl[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = $this->encrypt['ssl_verify'];
+				$ssl[$attr] = $this->encrypt['ssl_verify'];
 			}
 
 			// DO NOT use array_merge() here!
@@ -192,6 +192,26 @@ class CI_DB_pdo_mysql_driver extends CI_DB_pdo_driver {
 		}
 
 		return $pdo;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * PDO_MYSQL attribute
+	 *
+	 * The PDO::MYSQL_ATTR_* constants are deprecated as of PHP 8.5
+	 * in favor of Pdo\Mysql::ATTR_*, which only exist since PHP 8.4.
+	 *
+	 * @param	string	$name	Attribute name, without the prefix
+	 * @return	int|null
+	 */
+	protected function _mysql_attr($name)
+	{
+		$constant = class_exists('Pdo\Mysql', FALSE)
+			? 'Pdo\Mysql::ATTR_'.$name
+			: 'PDO::MYSQL_ATTR_'.$name;
+
+		return defined($constant) ? constant($constant) : NULL;
 	}
 
 	// --------------------------------------------------------------------

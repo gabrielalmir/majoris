@@ -208,7 +208,7 @@ if ( ! function_exists('entities_to_ascii'))
 		{
 			for ($i = 0, $s = count($matches[0]); $i < $s; $i++)
 			{
-				$digits = $matches[1][$i];
+				$digits = (int) $matches[1][$i];
 				$out = '';
 
 				if ($digits < 128)
@@ -220,11 +220,23 @@ if ( ! function_exists('entities_to_ascii'))
 				{
 					$out .= chr(192 + (($digits - ($digits % 64)) / 64)).chr(128 + ($digits % 64));
 				}
-				else
+				elseif ($digits < 65536)
 				{
 					$out .= chr(224 + (($digits - ($digits % 4096)) / 4096))
 						.chr(128 + ((($digits % 4096) - ($digits % 64)) / 64))
 						.chr(128 + ($digits % 64));
+				}
+				elseif ($digits <= 0x10FFFF)
+				{
+					$out .= chr(240 + ($digits >> 18))
+						.chr(128 + (($digits >> 12) & 63))
+						.chr(128 + (($digits >> 6) & 63))
+						.chr(128 + ($digits & 63));
+				}
+				else
+				{
+					// Not a valid Unicode code point; leave it as is
+					continue;
 				}
 
 				$str = str_replace($matches[0][$i], $out, $str);
