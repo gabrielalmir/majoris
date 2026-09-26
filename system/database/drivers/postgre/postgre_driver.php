@@ -159,7 +159,7 @@ class CI_DB_postgre_driver extends CI_DB {
 			{
 				log_message('error', "Database: Unable to set the configured connection charset ('{$this->char_set}').");
 				pg_close($this->conn_id);
-				return ($this->db->db_debug) ? $this->display_error('db_unable_to_set_charset', $this->char_set) : FALSE;
+				return ($this->db_debug) ? $this->display_error('db_unable_to_set_charset', $this->char_set) : FALSE;
 			}
 
 			empty($this->schema) OR $this->simple_query('SET search_path TO '.$this->schema.',public');
@@ -180,7 +180,7 @@ class CI_DB_postgre_driver extends CI_DB {
 	 */
 	public function reconnect()
 	{
-		if (pg_ping($this->conn_id) === FALSE)
+		if ($this->conn_id !== FALSE && pg_ping($this->conn_id) === FALSE)
 		{
 			$this->conn_id = FALSE;
 		}
@@ -462,7 +462,10 @@ class CI_DB_postgre_driver extends CI_DB {
 	 */
 	public function error()
 	{
-		return array('code' => '', 'message' => pg_last_error($this->conn_id));
+		return array(
+			'code'    => '',
+			'message' => ($this->conn_id !== FALSE) ? pg_last_error($this->conn_id) : ''
+		);
 	}
 
 	// --------------------------------------------------------------------

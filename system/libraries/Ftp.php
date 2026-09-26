@@ -100,7 +100,7 @@ class CI_FTP {
 	 *
 	 * @var	resource
 	 */
-	protected $conn_id;
+	protected $conn_id = FALSE;
 
 	// --------------------------------------------------------------------
 
@@ -203,7 +203,7 @@ class CI_FTP {
 	 */
 	protected function _is_conn()
 	{
-		if ($this->conn_id === FALSE)
+		if (empty($this->conn_id))
 		{
 			if ($this->debug === TRUE)
 			{
@@ -645,9 +645,14 @@ class CI_FTP {
 	 */
 	public function close()
 	{
-		return $this->_is_conn()
-			? @ftp_close($this->conn_id)
-			: FALSE;
+		if ( ! $this->_is_conn())
+		{
+			return FALSE;
+		}
+
+		$result = @ftp_close($this->conn_id);
+		$this->conn_id = FALSE;
+		return $result;
 	}
 
 	// ------------------------------------------------------------------------

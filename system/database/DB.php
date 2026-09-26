@@ -117,7 +117,7 @@ function &DB($params = '')
 		}
 
 		$params = array(
-			'dbdriver'	=> $dsn['scheme'],
+			'dbdriver'	=> isset($dsn['scheme']) ? $dsn['scheme'] : '',
 			'hostname'	=> isset($dsn['host']) ? rawurldecode($dsn['host']) : '',
 			'port'		=> isset($dsn['port']) ? rawurldecode($dsn['port']) : '',
 			'username'	=> isset($dsn['user']) ? rawurldecode($dsn['user']) : '',

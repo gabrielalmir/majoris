@@ -276,7 +276,12 @@ class CI_DB_oci8_driver extends CI_DB {
 		/* Oracle must parse the query before it is run. All of the actions with
 		 * the query are based on the statement id returned by oci_parse().
 		 */
-		$this->result_id = oci_parse($this->conn_id, $sql);
+		if (($this->result_id = oci_parse($this->conn_id, $sql)) === FALSE)
+		{
+			$this->_error = oci_error($this->conn_id);
+			return FALSE;
+		}
+
 		oci_set_prefetch($this->result_id, 1000);
 		$result = oci_execute($this->result_id, $this->commit_mode);
 		$this->_error = oci_error($this->result_id);

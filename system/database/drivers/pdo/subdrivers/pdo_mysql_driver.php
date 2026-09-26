@@ -261,7 +261,9 @@ class CI_DB_pdo_mysql_driver extends CI_DB_pdo_driver {
 	 */
 	protected function _trans_commit()
 	{
-		if ($this->conn_id->commit())
+		// PDO throws an exception if there's no active transaction,
+		// e.g. after an implicit commit caused by a DDL statement
+		if ( ! $this->conn_id->inTransaction() OR $this->conn_id->commit())
 		{
 			$this->conn_id->setAttribute(PDO::ATTR_AUTOCOMMIT, TRUE);
 			return TRUE;
@@ -279,7 +281,7 @@ class CI_DB_pdo_mysql_driver extends CI_DB_pdo_driver {
 	 */
 	protected function _trans_rollback()
 	{
-		if ($this->conn_id->rollBack())
+		if ( ! $this->conn_id->inTransaction() OR $this->conn_id->rollBack())
 		{
 			$this->conn_id->setAttribute(PDO::ATTR_AUTOCOMMIT, TRUE);
 			return TRUE;

@@ -351,15 +351,18 @@ if ( ! function_exists('highlight_code'))
 		$str = highlight_string('<?php '.$str.' ?>', TRUE);
 
 		// Remove our artificially added PHP, and the syntax highlighting that came with it
+		// Note: PHP 8.3 changed the output to <pre><code>, without newlines and &nbsp;
 		$str = preg_replace(
 			array(
 				'/<span style="color: #([A-Z0-9]+)">&lt;\?php(&nbsp;| )/i',
 				'/(<span style="color: #[A-Z0-9]+">.*?)\?&gt;<\/span>\n<\/span>\n<\/code>/is',
+				'/(<span style="color: #[A-Z0-9]+">.*?)\?&gt;<\/span><\/code><\/pre>/is',
 				'/<span style="color: #[A-Z0-9]+"\><\/span>/i'
 			),
 			array(
 				'<span style="color: #$1">',
 				"$1</span>\n</span>\n</code>",
+				'$1</span></code></pre>',
 				''
 			),
 			$str

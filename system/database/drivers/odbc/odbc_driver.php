@@ -108,6 +108,13 @@ class CI_DB_odbc_driver extends CI_DB_driver {
 	 */
 	private $binds = array();
 
+	/**
+	 * Affected rows of the last prepared write query
+	 *
+	 * @var	int
+	 */
+	private $_affected_rows = 0;
+
 	// --------------------------------------------------------------------
 
 	/**
@@ -231,8 +238,16 @@ class CI_DB_odbc_driver extends CI_DB_driver {
 
 		if (TRUE === ($success = odbc_execute($this->odbc_result, $this->binds)))
 		{
-			// For queries that return result sets, return the result_id resource on success
-			$this->is_write_type($sql) OR $success = $this->odbc_result;
+			if ($this->is_write_type($sql))
+			{
+				// The statement is discarded below, so keep its row count
+				$this->_affected_rows = odbc_num_rows($this->odbc_result);
+			}
+			else
+			{
+				// For queries that return result sets, return the result_id resource on success
+				$success = $this->odbc_result;
+			}
 		}
 
 		$this->odbc_result = NULL;
@@ -329,7 +344,10 @@ class CI_DB_odbc_driver extends CI_DB_driver {
 	 */
 	public function affected_rows()
 	{
-		return odbc_num_rows($this->result_id);
+		// Prepared write queries leave result_id set to TRUE
+		return is_bool($this->result_id)
+			? $this->_affected_rows
+			: odbc_num_rows($this->result_id);
 	}
 
 	// --------------------------------------------------------------------
