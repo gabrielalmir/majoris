@@ -211,14 +211,12 @@ class CI_Session_redis_driver extends CI_Session_driver implements CI_Session_dr
 			else
 			{
 				$this->_redis = $redis;
-				$this->php5_validate_id();
 				return $this->_success;
 			}
 		}
 		else
 		{
 			$this->_redis = $redis;
-			$this->php5_validate_id();
 			return $this->_success;
 		}
 

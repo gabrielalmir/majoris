@@ -1217,14 +1217,6 @@ class CI_Form_validation {
 			return FALSE;
 		}
 
-		// PHP 7 accepts IPv6 addresses within square brackets as hostnames,
-		// but it appears that the PR that came in with https://bugs.php.net/bug.php?id=68039
-		// was never merged into a PHP 5 branch ... https://3v4l.org/8PsSN
-		if (preg_match('/^\[([^\]]+)\]/', $str, $matches) && ! is_php('7') && filter_var($matches[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== FALSE)
-		{
-			$str = 'ipv6.host'.substr($str, strlen($matches[1]) + 2);
-		}
-
 		return (filter_var('http://'.$str, FILTER_VALIDATE_URL) !== FALSE);
 	}
 
@@ -1303,18 +1295,6 @@ class CI_Form_validation {
 	 */
 	public function valid_mac($mac)
 	{
-		if ( ! is_php('5.5'))
-		{
-			// Most common format, with either dash or colon delimiters
-			if (preg_match('#\A[0-9a-f]{2}(?<delimiter>[:-])([0-9a-f]{2}(?P=delimiter)){4}[0-9a-f]{2}\z#i', $mac))
-			{
-				return TRUE;
-			}
-
-			// The less common format; e.g. 0123.4567.89ab
-			return (bool) preg_match('#((\A|\.)[0-9a-f]{4}){3}\z#i', $mac);
-		}
-
 		return (bool) filter_var($mac, FILTER_VALIDATE_MAC);
 	}
 

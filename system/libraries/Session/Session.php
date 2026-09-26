@@ -105,23 +105,7 @@ class CI_Session {
 
 		$class   = new $class($this->_config);
 		$wrapper = new CI_SessionWrapper($class);
-		if (is_php('5.4'))
-		{
-			session_set_save_handler($wrapper, TRUE);
-		}
-		else
-		{
-			session_set_save_handler(
-				array($wrapper, 'open'),
-				array($wrapper, 'close'),
-				array($wrapper, 'read'),
-				array($wrapper, 'write'),
-				array($wrapper, 'destroy'),
-				array($wrapper, 'gc')
-			);
-
-			register_shutdown_function('session_write_close');
-		}
+		session_set_save_handler($wrapper, TRUE);
 
 		// Sanitize the cookie, because apparently PHP doesn't do that for userspace handlers
 		if (isset($_COOKIE[$this->_config['cookie_name']])
@@ -155,30 +139,18 @@ class CI_Session {
 		elseif (isset($_COOKIE[$this->_config['cookie_name']]) && $_COOKIE[$this->_config['cookie_name']] === session_id())
 		{
 			$expires = empty($this->_config['cookie_lifetime']) ? 0 : time() + $this->_config['cookie_lifetime'];
-			if (is_php('7.3'))
-			{
-				setcookie(
-					$this->_config['cookie_name'],
-					session_id(),
-					array(
-						'expires' => $expires,
-						'path' => $this->_config['cookie_path'],
-						'domain' => $this->_config['cookie_domain'],
-						'secure' => $this->_config['cookie_secure'],
-						'httponly' => TRUE,
-						'samesite' => $this->_config['cookie_samesite']
-					)
-				);
-			}
-			else
-			{
-				$header = 'Set-Cookie: '.$this->_config['cookie_name'].'='.session_id();
-				$header .= empty($expires) ? '' : '; Expires='.gmdate('D, d-M-Y H:i:s T', $expires).'; Max-Age='.$this->_config['cookie_lifetime'];
-				$header .= '; Path='.$this->_config['cookie_path'];
-				$header .= ($this->_config['cookie_domain'] !== '' ? '; Domain='.$this->_config['cookie_domain'] : '');
-				$header .= ($this->_config['cookie_secure'] ? '; Secure' : '').'; HttpOnly; SameSite='.$this->_config['cookie_samesite'];
-				header($header);
-			}
+			setcookie(
+				$this->_config['cookie_name'],
+				session_id(),
+				array(
+					'expires' => $expires,
+					'path' => $this->_config['cookie_path'],
+					'domain' => $this->_config['cookie_domain'],
+					'secure' => $this->_config['cookie_secure'],
+					'httponly' => TRUE,
+					'samesite' => $this->_config['cookie_samesite']
+				)
+			);
 
 			if ( ! $this->_config['cookie_secure'] && $this->_config['cookie_samesite'] === 'None')
 			{
@@ -205,9 +177,6 @@ class CI_Session {
 	 */
 	protected function _ci_load_classes($driver)
 	{
-		// PHP 7 compatibility
-		interface_exists('SessionUpdateTimestampHandlerInterface', FALSE) OR require_once(BASEPATH.'libraries/Session/SessionUpdateTimestampHandlerInterface.php');
-
 		require_once(BASEPATH.'libraries/Session/CI_Session_driver_interface.php');
 		$wrapper = is_php('8.0') ? 'PHP8SessionWrapper' : 'OldSessionWrapper';
 		require_once(BASEPATH.'libraries/Session/'.$wrapper.'.php');
@@ -306,7 +275,7 @@ class CI_Session {
 		isset($params['cookie_secure']) OR $params['cookie_secure'] = (bool) config_item('cookie_secure');
 
 		isset($params['cookie_samesite']) OR $params['cookie_samesite'] = config_item('sess_samesite');
-		if ( ! isset($params['cookie_samesite']) && is_php('7.3'))
+		if ( ! isset($params['cookie_samesite']))
 		{
 			$params['cookie_samesite'] = ini_get('session.cookie_samesite');
 		}
@@ -321,27 +290,14 @@ class CI_Session {
 			$params['cookie_samesite'] = 'Lax';
 		}
 
-		if (is_php('7.3'))
-		{
-			session_set_cookie_params(array(
-				'lifetime' => $params['cookie_lifetime'],
-				'path'     => $params['cookie_path'],
-				'domain'   => $params['cookie_domain'],
-				'secure'   => $params['cookie_secure'],
-				'httponly' => TRUE,
-				'samesite' => $params['cookie_samesite']
-			));
-		}
-		else
-		{
-			session_set_cookie_params(
-				$params['cookie_lifetime'],
-				$params['cookie_path'].'; SameSite='.$params['cookie_samesite'],
-				$params['cookie_domain'],
-				$params['cookie_secure'],
-				TRUE // HttpOnly; Yes, this is intentional and not configurable for security reasons
-			);
-		}
+		session_set_cookie_params(array(
+			'lifetime' => $params['cookie_lifetime'],
+			'path'     => $params['cookie_path'],
+			'domain'   => $params['cookie_domain'],
+			'secure'   => $params['cookie_secure'],
+			'httponly' => TRUE, // Yes, this is intentional and not configurable for security reasons
+			'samesite' => $params['cookie_samesite']
+		));
 
 		if (empty($expiration))
 		{
@@ -387,42 +343,16 @@ class CI_Session {
 	 */
 	protected function _configure_sid_length()
 	{
-		if (PHP_VERSION_ID < 70100)
-		{
-			$hash_function = ini_get('session.hash_function');
-			if (ctype_digit($hash_function))
-			{
-				if ($hash_function !== '1')
-				{
-					ini_set('session.hash_function', 1);
-				}
+		$bits_per_character = (int) ini_get('session.sid_bits_per_character');
+		$sid_length         = (int) ini_get('session.sid_length');
 
-				$bits = 160;
-			}
-			elseif ( ! in_array($hash_function, hash_algos(), TRUE))
-			{
-				ini_set('session.hash_function', 1);
-				$bits = 160;
-			}
-			elseif (($bits = strlen(hash($hash_function, 'dummy', false)) * 4) < 160)
-			{
-				ini_set('session.hash_function', 1);
-				$bits = 160;
-			}
-
-			$bits_per_character = (int) ini_get('session.hash_bits_per_character');
-			$sid_length         = (int) ceil($bits / $bits_per_character);
-		}
-		else
+		// Changing session.sid_length is deprecated as of PHP 8.4,
+		// where we just go with whatever is configured.
+		if (PHP_VERSION_ID < 80400 && ($bits = $sid_length * $bits_per_character) < 160)
 		{
-			$bits_per_character = (int) ini_get('session.sid_bits_per_character');
-			$sid_length         = (int) ini_get('session.sid_length');
-			if (($bits = $sid_length * $bits_per_character) < 160)
-			{
-				// Add as many more characters as necessary to reach at least 160 bits
-				$sid_length += (int) ceil((160 % $bits) / $bits_per_character);
-				ini_set('session.sid_length', $sid_length);
-			}
+			// Add as many more characters as necessary to reach at least 160 bits
+			$sid_length += (int) ceil((160 % $bits) / $bits_per_character);
+			ini_set('session.sid_length', $sid_length);
 		}
 
 		// Yes, 4,5,6 are the only known possible values as of 2016-10-27

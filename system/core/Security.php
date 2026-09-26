@@ -274,34 +274,18 @@ class CI_Security {
 			return FALSE;
 		}
 
-		if (is_php('7.3'))
-		{
-			setcookie(
-				$this->_csrf_cookie_name,
-				$this->_csrf_hash,
-				array(
-					'expires'  => $expire,
-					'path'     => config_item('cookie_path'),
-					'domain'   => config_item('cookie_domain'),
-					'secure'   => $secure_cookie,
-					'httponly' => config_item('cookie_httponly'),
-					'samesite' => 'Strict'
-				)
-			);
-		}
-		else
-		{
-			$domain = trim(config_item('cookie_domain'));
-			header('Set-Cookie: '.$this->_csrf_cookie_name.'='.$this->_csrf_hash
-					.'; Expires='.gmdate('D, d-M-Y H:i:s T', $expire)
-					.'; Max-Age='.$this->_csrf_expire
-					.'; Path='.implode('/', array_map('rawurlencode', explode('/', config_item('cookie_path'))))
-					.($domain === '' ? '' : '; Domain='.$domain)
-					.($secure_cookie ? '; Secure' : '')
-					.(config_item('cookie_httponly') ? '; HttpOnly' : '')
-					.'; SameSite=Strict'
-			);
-		}
+		setcookie(
+			$this->_csrf_cookie_name,
+			$this->_csrf_hash,
+			array(
+				'expires'  => $expire,
+				'path'     => config_item('cookie_path'),
+				'domain'   => config_item('cookie_domain'),
+				'secure'   => $secure_cookie,
+				'httponly' => config_item('cookie_httponly'),
+				'samesite' => 'Strict'
+			)
+		);
 
 		log_message('info', 'CSRF cookie sent');
 
@@ -635,46 +619,18 @@ class CI_Security {
 			return FALSE;
 		}
 
-		if (function_exists('random_bytes'))
+		try
 		{
-			try
-			{
-				// The cast is required to avoid TypeError
-				return random_bytes((int) $length);
-			}
-			catch (Exception $e)
-			{
-				// If random_bytes() can't do the job, we can't either ...
-				// There's no point in using fallbacks.
-				log_message('error', $e->getMessage());
-				return FALSE;
-			}
+			// The cast is required to avoid TypeError
+			return random_bytes((int) $length);
 		}
-
-		// Unfortunately, none of the following PRNGs is guaranteed to exist ...
-		if (defined('MCRYPT_DEV_URANDOM') && ($output = mcrypt_create_iv($length, MCRYPT_DEV_URANDOM)) !== FALSE)
+		catch (Exception $e)
 		{
-			return $output;
+			// If random_bytes() can't do the job, we can't either ...
+			// There's no point in using fallbacks.
+			log_message('error', $e->getMessage());
+			return FALSE;
 		}
-
-		if (is_readable('/dev/urandom') && ($fp = fopen('/dev/urandom', 'rb')) !== FALSE)
-		{
-			// Try not to waste entropy ...
-			stream_set_chunk_size($fp, $length);
-			$output = fread($fp, $length);
-			fclose($fp);
-			if ($output !== FALSE)
-			{
-				return $output;
-			}
-		}
-
-		if (function_exists('openssl_random_pseudo_bytes'))
-		{
-			return openssl_random_pseudo_bytes($length);
-		}
-
-		return FALSE;
 	}
 
 	// --------------------------------------------------------------------

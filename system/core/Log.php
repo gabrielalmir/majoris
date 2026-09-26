@@ -106,15 +106,6 @@ class CI_Log {
 	protected $_levels = array('ERROR' => 1, 'DEBUG' => 2, 'INFO' => 3, 'ALL' => 4);
 
 	/**
-	 * mbstring.func_overload flag
-	 *
-	 * @var	bool
-	 */
-	protected static $func_overload;
-
-	// --------------------------------------------------------------------
-
-	/**
 	 * Class constructor
 	 *
 	 * @return	void
@@ -122,8 +113,6 @@ class CI_Log {
 	public function __construct()
 	{
 		$config =& get_config();
-
-		isset(self::$func_overload) OR self::$func_overload = ( ! is_php('8.0') && extension_loaded('mbstring') && @ini_get('mbstring.func_overload'));
 
 		$this->_log_path = ($config['log_path'] !== '')
 			? rtrim($config['log_path'], '/\\').DIRECTORY_SEPARATOR : APPPATH.'logs'.DIRECTORY_SEPARATOR;
@@ -220,9 +209,9 @@ class CI_Log {
 
 		$message .= $this->_format_line($level, $date, $msg);
 
-		for ($written = 0, $length = self::strlen($message); $written < $length; $written += $result)
+		for ($written = 0, $length = strlen($message); $written < $length; $written += $result)
 		{
-			if (($result = fwrite($fp, self::substr($message, $written))) === FALSE)
+			if (($result = fwrite($fp, substr($message, $written))) === FALSE)
 			{
 				break;
 			}
@@ -255,42 +244,5 @@ class CI_Log {
 	protected function _format_line($level, $date, $message)
 	{
 		return $level.' - '.$date.' --> '.$message.PHP_EOL;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Byte-safe strlen()
-	 *
-	 * @param	string	$str
-	 * @return	int
-	 */
-	protected static function strlen($str)
-	{
-		return (self::$func_overload)
-			? mb_strlen($str, '8bit')
-			: strlen($str);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Byte-safe substr()
-	 *
-	 * @param	string	$str
-	 * @param	int	$start
-	 * @param	int	$length
-	 * @return	string
-	 */
-	protected static function substr($str, $start, $length = NULL)
-	{
-		if (self::$func_overload)
-		{
-			return mb_substr($str, $start, $length, '8bit');
-		}
-
-		return isset($length)
-			? substr($str, $start, $length)
-			: substr($str, $start);
 	}
 }

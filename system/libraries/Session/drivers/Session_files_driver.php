@@ -85,15 +85,6 @@ class CI_Session_files_driver extends CI_Session_driver implements CI_Session_dr
 	protected $_sid_regexp;
 
 	/**
-	 * mbstring.func_overload flag
-	 *
-	 * @var	bool
-	 */
-	protected static $func_overload;
-
-	// ------------------------------------------------------------------------
-
-	/**
 	 * Class constructor
 	 *
 	 * @param	array	$params	Configuration parameters
@@ -115,8 +106,6 @@ class CI_Session_files_driver extends CI_Session_driver implements CI_Session_dr
 		}
 
 		$this->_sid_regexp = $this->_config['_sid_regexp'];
-
-		isset(self::$func_overload) OR self::$func_overload = ( ! is_php('8.0') && extension_loaded('mbstring') && @ini_get('mbstring.func_overload'));
 	}
 
 	// ------------------------------------------------------------------------
@@ -150,8 +139,6 @@ class CI_Session_files_driver extends CI_Session_driver implements CI_Session_dr
 		$this->_file_path = $this->_config['save_path'].DIRECTORY_SEPARATOR
 			.$name // we'll use the session cookie name as a prefix to avoid collisions
 			.($this->_config['match_ip'] ? md5($_SERVER['REMOTE_ADDR']) : '');
-
-		$this->php5_validate_id();
 
 		return $this->_success;
 	}
@@ -214,7 +201,7 @@ class CI_Session_files_driver extends CI_Session_driver implements CI_Session_dr
 		}
 
 		$session_data = '';
-		for ($read = 0, $length = filesize($this->_file_path.$session_id); $read < $length; $read += self::strlen($buffer))
+		for ($read = 0, $length = filesize($this->_file_path.$session_id); $read < $length; $read += strlen($buffer))
 		{
 			if (($buffer = fread($this->_file_handle, $length - $read)) === FALSE)
 			{
@@ -432,18 +419,4 @@ class CI_Session_files_driver extends CI_Session_driver implements CI_Session_dr
 		return $result;
 	}
 
-	// --------------------------------------------------------------------
-
-	/**
-	 * Byte-safe strlen()
-	 *
-	 * @param	string	$str
-	 * @return	int
-	 */
-	protected static function strlen($str)
-	{
-		return (self::$func_overload)
-			? mb_strlen($str, '8bit')
-			: strlen($str);
-	}
 }
