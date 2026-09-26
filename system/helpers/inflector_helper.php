@@ -202,6 +202,7 @@ if ( ! function_exists('underscore'))
 	 */
 	function underscore($str)
 	{
+		$str = (string) $str;
 		return preg_replace('/[\s]+/', '_', trim(MB_ENABLED ? mb_strtolower($str) : strtolower($str)));
 	}
 }
@@ -221,6 +222,7 @@ if ( ! function_exists('humanize'))
 	 */
 	function humanize($str, $separator = '_')
 	{
+		$str = (string) $str;
 		return ucwords(preg_replace('/['.preg_quote($separator).']+/', ' ', trim(MB_ENABLED ? mb_strtolower($str) : strtolower($str))));
 	}
 }

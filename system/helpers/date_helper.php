@@ -68,7 +68,7 @@ if ( ! function_exists('now'))
 			$timezone = config_item('time_reference');
 		}
 
-		if ($timezone === 'local' OR $timezone === date_default_timezone_get())
+		if (empty($timezone) OR $timezone === 'local' OR $timezone === date_default_timezone_get())
 		{
 			return time();
 		}
@@ -346,16 +346,20 @@ if ( ! function_exists('mysql_to_unix'))
 		// since the formatting changed with MySQL 4.1
 		// YYYY-MM-DD HH:MM:SS
 
-		$time = str_replace(array('-', ':', ' '), '', $time);
+		$time = str_replace(array('-', ':', ' '), '', (string) $time);
+		if ($time === '')
+		{
+			return FALSE;
+		}
 
 		// YYYYMMDDHHMMSS
 		return mktime(
-			substr($time, 8, 2),
-			substr($time, 10, 2),
-			substr($time, 12, 2),
-			substr($time, 4, 2),
-			substr($time, 6, 2),
-			substr($time, 0, 4)
+			(int) substr($time, 8, 2),
+			(int) substr($time, 10, 2),
+			(int) substr($time, 12, 2),
+			(int) substr($time, 4, 2),
+			(int) substr($time, 6, 2),
+			(int) substr($time, 0, 4)
 		);
 	}
 }
@@ -376,6 +380,11 @@ if ( ! function_exists('unix_to_human'))
 	 */
 	function unix_to_human($time = '', $seconds = FALSE, $fmt = 'us')
 	{
+		if ($time === '' OR $time === NULL)
+		{
+			$time = now();
+		}
+
 		$r = date('Y', $time).'-'.date('m', $time).'-'.date('d', $time).' ';
 
 		if ($fmt === 'us')

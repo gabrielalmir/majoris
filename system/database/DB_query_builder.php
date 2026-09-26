@@ -284,9 +284,9 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 	 */
 	public function select($select = '*', $escape = NULL)
 	{
-		if (is_string($select))
+		if ( ! is_array($select))
 		{
-			$select = explode(',', $select);
+			$select = explode(',', (string) $select);
 		}
 
 		// If the escape value was not set, we will base it on the global setting
@@ -526,7 +526,7 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 	 */
 	public function join($table, $cond, $type = '', $escape = NULL)
 	{
-		$type = trim(strtoupper($type).' JOIN');
+		$type = trim(strtoupper((string) $type).' JOIN');
 		preg_match('#^(NATURAL\s+)?((LEFT|RIGHT|FULL)\s+)?((INNER|OUTER)\s+)?JOIN$#', $type) OR $type = 'JOIN';
 
 		// Extract any aliases that might exist. We use this information
@@ -1025,7 +1025,7 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 
 		is_bool($escape) OR $escape = $this->_protect_identifiers;
 		// lowercase $side in case somebody writes e.g. 'BEFORE' instead of 'before' (doh)
-		$side = strtolower($side);
+		$side = strtolower((string) $side);
 
 		foreach ($field as $k => $v)
 		{
@@ -1273,7 +1273,7 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 	 */
 	public function order_by($orderby, $direction = '', $escape = NULL)
 	{
-		$direction = strtoupper(trim($direction));
+		$direction = strtoupper(trim((string) $direction));
 
 		if ($direction === 'RANDOM')
 		{
@@ -1574,7 +1574,7 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 			$this->set_insert_batch($set, '', $escape);
 		}
 
-		if (strlen($table) === 0)
+		if (strlen((string) $table) === 0)
 		{
 			if ( ! isset($this->qb_from[0]))
 			{
@@ -1991,7 +1991,7 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 			$this->set_update_batch($set, $index);
 		}
 
-		if (strlen($table) === 0)
+		if (strlen((string) $table) === 0)
 		{
 			if ( ! isset($this->qb_from[0]))
 			{
@@ -2349,7 +2349,7 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 
 		// Does the string contain a comma?  If so, we need to separate
 		// the string into discreet statements
-		if (strpos($table, ',') !== FALSE)
+		if (strpos((string) $table, ',') !== FALSE)
 		{
 			return $this->_track_aliases(explode(',', $table));
 		}
@@ -2780,7 +2780,7 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 	 */
 	protected function _is_literal($str)
 	{
-		$str = trim($str);
+		$str = trim((string) $str);
 
 		if (empty($str) OR ctype_digit($str) OR (string) (float) $str === $str OR in_array(strtoupper($str), array('TRUE', 'FALSE'), TRUE))
 		{

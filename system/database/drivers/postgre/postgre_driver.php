@@ -87,7 +87,7 @@ class CI_DB_postgre_driver extends CI_DB {
 	{
 		$this->dsn === '' OR $this->dsn = '';
 
-		if (strpos($this->hostname, '/') !== FALSE)
+		if (strpos((string) $this->hostname, '/') !== FALSE)
 		{
 			// If UNIX sockets are used, we shouldn't set a port
 			$this->port = '';
@@ -95,7 +95,7 @@ class CI_DB_postgre_driver extends CI_DB {
 
 		$this->hostname === '' OR $this->dsn = 'host='.$this->hostname.' ';
 
-		if ( ! empty($this->port) && ctype_digit($this->port))
+		if ( ! empty($this->port) && ctype_digit((string) $this->port))
 		{
 			$this->dsn .= 'port='.$this->port.' ';
 		}
@@ -477,7 +477,7 @@ class CI_DB_postgre_driver extends CI_DB {
 	 */
 	public function order_by($orderby, $direction = '', $escape = NULL)
 	{
-		$direction = strtoupper(trim($direction));
+		$direction = strtoupper(trim((string) $direction));
 		if ($direction === 'RANDOM')
 		{
 			if ( ! is_float($orderby) && ctype_digit((string) $orderby))

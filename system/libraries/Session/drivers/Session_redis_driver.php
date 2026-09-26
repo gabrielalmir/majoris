@@ -142,7 +142,7 @@ class CI_Session_redis_driver extends CI_Session_driver implements CI_Session_dr
 		{
 			$save_path = array(
 				'host'    => $matches[1],
-				'port'    => empty($matches[2]) ? NULL : $matches[2],
+				'port'    => empty($matches[2]) ? 6379 : (int) $matches[2],
 				'timeout' => 0.0 // We always pass this to Redis::connect(), so it needs to exist
 			);
 		}

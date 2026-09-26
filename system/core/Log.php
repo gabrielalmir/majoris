@@ -114,7 +114,7 @@ class CI_Log {
 	{
 		$config =& get_config();
 
-		$this->_log_path = ($config['log_path'] !== '')
+		$this->_log_path = ( ! empty($config['log_path']))
 			? rtrim($config['log_path'], '/\\').DIRECTORY_SEPARATOR : APPPATH.'logs'.DIRECTORY_SEPARATOR;
 
 		$this->_log_filename = (isset($config['log_filename']) && $config['log_filename'] !== '')
@@ -199,7 +199,7 @@ class CI_Log {
 		{
 			$microtime_full = microtime(TRUE);
 			$microtime_short = sprintf("%06d", ($microtime_full - floor($microtime_full)) * 1000000);
-			$date = new DateTime(date('Y-m-d H:i:s.'.$microtime_short, $microtime_full));
+			$date = new DateTime(date('Y-m-d H:i:s.'.$microtime_short, (int) $microtime_full));
 			$date = $date->format($this->_date_fmt);
 		}
 		else

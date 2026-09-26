@@ -550,7 +550,7 @@ class CI_Output {
 	{
 		$CI =& get_instance();
 		$path = $CI->config->item('cache_path');
-		$cache_path = ($path === '') ? APPPATH.'cache'.DIRECTORY_SEPARATOR : rtrim($path, '/\\').DIRECTORY_SEPARATOR;
+		$cache_path = empty($path) ? APPPATH.'cache'.DIRECTORY_SEPARATOR : rtrim($path, '/\\').DIRECTORY_SEPARATOR;
 
 		if ( ! is_dir($cache_path) OR ! is_really_writable($cache_path))
 		{
@@ -651,7 +651,7 @@ class CI_Output {
 	 */
 	public function _display_cache(&$CFG, &$URI)
 	{
-		$cache_path = ($CFG->item('cache_path') === '') ? APPPATH.'cache/' : $CFG->item('cache_path');
+		$cache_path = empty($CFG->item('cache_path')) ? APPPATH.'cache/' : $CFG->item('cache_path');
 
 		// Build the file path. The file name is an MD5 hash of the full URI
 		$uri = $CFG->item('base_url').$CFG->slash_item('index_page').$URI->uri_string;
@@ -729,7 +729,7 @@ class CI_Output {
 	{
 		$CI =& get_instance();
 		$cache_path = $CI->config->item('cache_path');
-		if ($cache_path === '')
+		if (empty($cache_path))
 		{
 			$cache_path = APPPATH.'cache/';
 		}

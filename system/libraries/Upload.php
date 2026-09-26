@@ -1278,7 +1278,7 @@ class CI_Upload {
 			if (function_usable('shell_exec'))
 			{
 				$mime = @shell_exec($cmd);
-				if (strlen($mime) > 0)
+				if (is_string($mime) && strlen($mime) > 0)
 				{
 					$mime = explode("\n", trim($mime));
 					if (preg_match($regexp, $mime[(count($mime) - 1)], $matches))

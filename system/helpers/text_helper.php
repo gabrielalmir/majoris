@@ -64,7 +64,7 @@ if ( ! function_exists('word_limiter'))
 	 */
 	function word_limiter($str, $limit = 100, $end_char = '&#8230;')
 	{
-		if (trim($str) === '')
+		if (trim((string) $str) === '')
 		{
 			return $str;
 		}
@@ -97,7 +97,7 @@ if ( ! function_exists('character_limiter'))
 	 */
 	function character_limiter($str, $n = 500, $end_char = '&#8230;')
 	{
-		if (mb_strlen($str) < $n)
+		if (mb_strlen((string) $str) < $n)
 		{
 			return $str;
 		}
@@ -139,7 +139,7 @@ if ( ! function_exists('ascii_to_entities'))
 	function ascii_to_entities($str)
 	{
 		$out = '';
-		$length = strlen($str) - 1;
+		$length = strlen((string) $str) - 1;
 		for ($i = 0, $count = 1, $temp = array(); $i <= $length; $i++)
 		{
 			$ordinal = ord($str[$i]);
@@ -204,6 +204,7 @@ if ( ! function_exists('entities_to_ascii'))
 	 */
 	function entities_to_ascii($str, $all = TRUE)
 	{
+		$str = (string) $str;
 		if (preg_match_all('/\&#(\d+)\;/', $str, $matches))
 		{
 			for ($i = 0, $s = count($matches[0]); $i < $s; $i++)
@@ -390,7 +391,7 @@ if ( ! function_exists('highlight_phrase'))
 	 */
 	function highlight_phrase($str, $phrase, $tag_open = '<mark>', $tag_close = '</mark>')
 	{
-		return ($str !== '' && $phrase !== '')
+		return ((string) $str !== '' && (string) $phrase !== '')
 			? preg_replace('/('.preg_quote($phrase, '/').')/i'.(UTF8_ENABLED ? 'u' : ''), $tag_open.'\\1'.$tag_close, $str)
 			: $str;
 	}
@@ -459,7 +460,7 @@ if ( ! function_exists('word_wrap'))
 		is_numeric($charlim) OR $charlim = 76;
 
 		// Reduce multiple spaces
-		$str = preg_replace('| +|', ' ', $str);
+		$str = preg_replace('| +|', ' ', (string) $str);
 
 		// Standardize newlines
 		if (strpos($str, "\r") !== FALSE)
@@ -553,7 +554,7 @@ if ( ! function_exists('ellipsize'))
 	function ellipsize($str, $max_length, $position = 1, $ellipsis = '&hellip;')
 	{
 		// Strip tags
-		$str = trim(strip_tags($str));
+		$str = trim(strip_tags((string) $str));
 
 		// Is the string long enough to ellipsize?
 		if (mb_strlen($str) <= $max_length)

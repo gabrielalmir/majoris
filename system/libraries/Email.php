@@ -641,7 +641,7 @@ class CI_Email {
 	 */
 	public function subject($subject)
 	{
-		$subject = $this->_prep_q_encoding($subject);
+		$subject = $this->_prep_q_encoding((string) $subject);
 		$this->set_header('Subject', $subject);
 		return $this;
 	}
@@ -656,7 +656,7 @@ class CI_Email {
 	 */
 	public function message($body)
 	{
-		$this->_body = rtrim(str_replace("\r", '', $body));
+		$this->_body = rtrim(str_replace("\r", '', (string) $body));
 		return $this;
 	}
 

@@ -709,6 +709,7 @@ if ( ! function_exists('remove_invisible_characters'))
 	 */
 	function remove_invisible_characters($str, $url_encoded = TRUE)
 	{
+		isset($str) OR $str = '';
 		$non_displayables = array();
 
 		// every control character except newline (dec 10),

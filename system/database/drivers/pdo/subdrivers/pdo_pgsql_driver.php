@@ -195,7 +195,7 @@ class CI_DB_pdo_pgsql_driver extends CI_DB_pdo_driver {
 	 */
 	public function order_by($orderby, $direction = '', $escape = NULL)
 	{
-		$direction = strtoupper(trim($direction));
+		$direction = strtoupper(trim((string) $direction));
 		if ($direction === 'RANDOM')
 		{
 			if ( ! is_float($orderby) && ctype_digit((string) $orderby))

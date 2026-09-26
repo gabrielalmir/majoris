@@ -1118,7 +1118,7 @@ abstract class CI_DB_driver {
 			return $str;
 		}
 
-		$str = $this->_escape_str($str);
+		$str = $this->_escape_str((string) $str);
 
 		// escape LIKE condition wildcards
 		if ($like === TRUE)
@@ -1374,8 +1374,11 @@ abstract class CI_DB_driver {
 
 			return $item;
 		}
+
+		$item = (string) $item;
+
 		// Avoid breaking functions and literal values inside queries
-		elseif (ctype_digit($item) OR $item[0] === "'" OR ($this->_escape_char !== '"' && $item[0] === '"') OR strpos($item, '(') !== FALSE)
+		if (ctype_digit($item) OR $item[0] === "'" OR ($this->_escape_char !== '"' && $item[0] === '"') OR strpos($item, '(') !== FALSE)
 		{
 			return $item;
 		}
@@ -1495,6 +1498,7 @@ abstract class CI_DB_driver {
 	 */
 	protected function _update($table, $values)
 	{
+		$valstr = array();
 		foreach ($values as $key => $val)
 		{
 			$valstr[] = $key.' = '.$val;
@@ -1804,6 +1808,8 @@ abstract class CI_DB_driver {
 
 			return $escaped_array;
 		}
+
+		$item = (string) $item;
 
 		// This is basically a bug fix for queries that use MAX, MIN, etc.
 		// If a parenthesis is found we know that we do not need to

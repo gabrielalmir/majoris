@@ -162,7 +162,7 @@ if ( ! function_exists('anchor'))
 
 		$site_url = is_array($uri)
 			? site_url($uri)
-			: (preg_match('#^(\w+:)?//#i', $uri) ? $uri : site_url($uri));
+			: (preg_match('#^(\w+:)?//#i', (string) $uri) ? $uri : site_url($uri));
 
 		if ($title === '')
 		{
@@ -196,7 +196,7 @@ if ( ! function_exists('anchor_popup'))
 	function anchor_popup($uri = '', $title = '', $attributes = FALSE)
 	{
 		$title = (string) $title;
-		$site_url = preg_match('#^(\w+:)?//#i', $uri) ? $uri : site_url($uri);
+		$site_url = preg_match('#^(\w+:)?//#i', (string) $uri) ? $uri : site_url($uri);
 
 		if ($title === '')
 		{
@@ -444,7 +444,7 @@ if ( ! function_exists('prep_url'))
 	 */
 	function prep_url($str = '')
 	{
-		if ($str === '')
+		if ($str === '' OR $str === NULL)
 		{
 			return '';
 		}
@@ -487,7 +487,7 @@ if ( ! function_exists('url_title'))
 			'('.$q_separator.')+'	=> $separator,
 		);
 
-		$str = strip_tags($str);
+		$str = strip_tags((string) $str);
 		foreach ($trans as $key => $val)
 		{
 			$str = preg_replace('#'.$key.'#i'.(UTF8_ENABLED ? 'u' : ''), $val, $str);
@@ -521,7 +521,7 @@ if ( ! function_exists('redirect'))
 	 */
 	function redirect($uri = '', $method = 'auto', $code = NULL)
 	{
-		if ( ! preg_match('#^(\w+:)?//#i', $uri))
+		if ( ! preg_match('#^(\w+:)?//#i', (string) $uri))
 		{
 			$uri = site_url($uri);
 		}

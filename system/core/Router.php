@@ -413,7 +413,8 @@ class CI_Router {
 					array_shift($matches);
 
 					// Execute the callback using the values in matches as its parameters.
-					$val = call_user_func_array($val, $matches);
+					// Named groups must not be passed as named arguments (PHP 8+).
+					$val = call_user_func_array($val, array_values($matches));
 				}
 				// Are we using the default routing method for back-references?
 				elseif (strpos($val, '$') !== FALSE && strpos($key, '(') !== FALSE)

@@ -376,7 +376,7 @@ abstract class CI_DB_utility {
 			// Set the filename if not provided (only needed with Zip files)
 			if ($prefs['filename'] === '')
 			{
-				$prefs['filename'] = (count($prefs['tables']) === 1 ? $prefs['tables'] : $this->db->database)
+				$prefs['filename'] = (count($prefs['tables']) === 1 ? current($prefs['tables']) : $this->db->database)
 							.date('Y-m-d_H-i', time()).'.sql';
 			}
 			else

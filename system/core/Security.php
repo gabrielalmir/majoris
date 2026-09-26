@@ -654,7 +654,7 @@ class CI_Security {
 	 */
 	public function entity_decode($str, $charset = NULL)
 	{
-		if (strpos($str, '&') === FALSE)
+		if (strpos((string) $str, '&') === FALSE)
 		{
 			return $str;
 		}
@@ -742,7 +742,7 @@ class CI_Security {
 				'#<img[\s/]+.*?src\s*=\s*?(([^\s"\'=<>`]+)).*?\>#i'
 			),
 			'\\2',
-			$str
+			(string) $str
 		);
 	}
 

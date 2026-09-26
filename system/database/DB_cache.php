@@ -94,7 +94,7 @@ class CI_DB_Cache {
 	{
 		if ($path === '')
 		{
-			if ($this->db->cachedir === '')
+			if (empty($this->db->cachedir))
 			{
 				return $this->db->cache_off();
 			}

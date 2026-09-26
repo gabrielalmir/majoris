@@ -213,7 +213,7 @@ class CI_Form_validation {
 		}
 
 		// If the field label wasn't passed we use the field name
-		$label = ($label === '') ? $field : $label;
+		$label = ($label === '' OR $label === NULL) ? $field : $label;
 
 		$indexes = array();
 
@@ -868,7 +868,7 @@ class CI_Form_validation {
 	{
 		// Do we need to translate the field name? We look for the prefix 'lang:' to determine this
 		// If we find one, but there's no translation for the string - just return it
-		if (sscanf($fieldname, 'lang:%s', $line) === 1 && FALSE === ($fieldname = $this->CI->lang->line($line, FALSE)))
+		if (sscanf((string) $fieldname, 'lang:%s', $line) === 1 && FALSE === ($fieldname = $this->CI->lang->line($line, FALSE)))
 		{
 			return $line;
 		}
@@ -1212,7 +1212,7 @@ class CI_Form_validation {
 
 		// Apparently, FILTER_VALIDATE_URL doesn't reject digit-only names for some reason ...
 		// See https://github.com/bcit-ci/CodeIgniter/issues/5755
-		if (ctype_digit($str))
+		if (ctype_digit((string) $str))
 		{
 			return FALSE;
 		}
@@ -1308,7 +1308,7 @@ class CI_Form_validation {
 	 */
 	public function alpha($str)
 	{
-		return ctype_alpha($str);
+		return ctype_alpha((string) $str);
 	}
 
 	// --------------------------------------------------------------------

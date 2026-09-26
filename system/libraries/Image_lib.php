@@ -819,7 +819,7 @@ class CI_Image_lib {
 			$copy	= 'imagecopyresized';
 		}
 
-		$dst_img = $create($this->width, $this->height);
+		$dst_img = $create((int) $this->width, (int) $this->height);
 
 		if ($this->image_type === 3) // png we can actually preserve transparency
 		{
@@ -827,7 +827,7 @@ class CI_Image_lib {
 			imagesavealpha($dst_img, TRUE);
 		}
 
-		$copy($dst_img, $src_img, 0, 0, $this->x_axis, $this->y_axis, $this->width, $this->height, $this->orig_width, $this->orig_height);
+		$copy($dst_img, $src_img, 0, 0, (int) $this->x_axis, (int) $this->y_axis, (int) $this->width, (int) $this->height, (int) $this->orig_width, (int) $this->orig_height);
 
 		// Show the image
 		if ($this->dynamic_output === TRUE)
@@ -1218,6 +1218,10 @@ class CI_Image_lib {
 			$x_axis += $this->orig_width - $wm_width;
 		}
 
+		// GD expects integer coordinates
+		$x_axis = (int) $x_axis;
+		$y_axis = (int) $y_axis;
+
 		// Build the finalized image
 		if ($wm_img_type === 3)
 		{
@@ -1366,6 +1370,10 @@ class CI_Image_lib {
 		{
 			$x_axis += floor(($this->orig_width - ($fontwidth * strlen($this->wm_text))) / 2);
 		}
+
+		// GD expects integer coordinates
+		$x_axis = (int) $x_axis;
+		$y_axis = (int) $y_axis;
 
 		if ($this->wm_use_drop_shadow)
 		{
