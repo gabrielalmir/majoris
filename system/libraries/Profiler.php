@@ -87,6 +87,22 @@ class CI_Profiler {
 	 */
 	protected $CI;
 
+	/**
+	 * Section toggles, set per $_available_sections item
+	 *
+	 * @var	bool
+	 */
+	protected $_compile_benchmarks = TRUE,
+		$_compile_get = TRUE,
+		$_compile_memory_usage = TRUE,
+		$_compile_post = TRUE,
+		$_compile_uri_string = TRUE,
+		$_compile_controller_info = TRUE,
+		$_compile_queries = TRUE,
+		$_compile_http_headers = TRUE,
+		$_compile_session_data = TRUE,
+		$_compile_config = TRUE;
+
 	// --------------------------------------------------------------------
 
 	/**

@@ -290,6 +290,13 @@ class CI_Image_lib {
 	public $dest_folder		= '';
 
 	/**
+	 * Destination image name
+	 *
+	 * @var string
+	 */
+	public $dest_image		= '';
+
+	/**
 	 * Image mime-type
 	 *
 	 * @var string

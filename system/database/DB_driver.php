@@ -51,6 +51,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * @author		EllisLab Dev Team
  * @link		https://codeigniter.com/userguide3/database/
  */
+#[\AllowDynamicProperties]
 abstract class CI_DB_driver {
 
 	/**
@@ -151,6 +152,32 @@ abstract class CI_DB_driver {
 	 * @var	bool
 	 */
 	public $pconnect		= FALSE;
+
+	/**
+	 * Failover connection settings
+	 *
+	 * @var	array
+	 */
+	public $failover		= array();
+
+	/**
+	 * Client compression flag
+	 *
+	 * Only used by MySQL-based drivers.
+	 *
+	 * @var	bool
+	 */
+	public $compress		= FALSE;
+
+	/**
+	 * Strict ON flag
+	 *
+	 * Whether we're running in strict SQL mode.
+	 * Only used by MySQL-based drivers.
+	 *
+	 * @var	bool
+	 */
+	public $stricton;
 
 	/**
 	 * Connection ID

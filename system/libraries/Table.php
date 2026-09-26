@@ -108,6 +108,13 @@ class CI_Table {
 	public $function	= NULL;
 
 	/**
+	 * Default template, used to fill in missing template keys
+	 *
+	 * @var array
+	 */
+	public $temp		= array();
+
+	/**
 	 * Set the template from the table config file if it exists
 	 *
 	 * @param	array	$config	(default: array())

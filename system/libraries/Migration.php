@@ -124,7 +124,7 @@ class CI_Migration {
 
 		foreach ($config as $key => $val)
 		{
-			$this->{'_'.$key} = $val;
+			property_exists($this, '_'.$key) && $this->{'_'.$key} = $val;
 		}
 
 		log_message('info', 'Migrations Class Initialized');
@@ -136,7 +136,7 @@ class CI_Migration {
 		}
 
 		// If not set, set it
-		$this->_migration_path !== '' OR $this->_migration_path = APPPATH.'migrations/';
+		empty($this->_migration_path) && $this->_migration_path = APPPATH.'migrations/';
 
 		// Add trailing slash if not set
 		$this->_migration_path = rtrim($this->_migration_path, '/').'/';
