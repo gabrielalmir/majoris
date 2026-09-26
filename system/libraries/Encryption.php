@@ -155,7 +155,7 @@ class CI_Encryption {
 
 		$this->initialize($params);
 
-		if ( ! isset($this->_key) && strlen($key = config_item('encryption_key')) > 0)
+		if ( ! isset($this->_key) && strlen($key = (string) config_item('encryption_key')) > 0)
 		{
 			$this->_key = $key;
 		}
@@ -346,7 +346,7 @@ class CI_Encryption {
 	 * @param	array	$params	Input parameters
 	 * @return	string
 	 */
-	public function encrypt($data, array $params = NULL)
+	public function encrypt($data, ?array $params = NULL)
 	{
 		if (($params = $this->_get_params($params)) === FALSE)
 		{
@@ -481,7 +481,7 @@ class CI_Encryption {
 	 * @param	array	$params	Input parameters
 	 * @return	string
 	 */
-	public function decrypt($data, array $params = NULL)
+	public function decrypt($data, ?array $params = NULL)
 	{
 		if (($params = $this->_get_params($params)) === FALSE)
 		{
@@ -835,7 +835,7 @@ class CI_Encryption {
 			return FALSE;
 		}
 
-		strlen($salt) OR $salt = str_repeat("\0", $this->_digests[$digest]);
+		strlen((string) $salt) OR $salt = str_repeat("\0", $this->_digests[$digest]);
 
 		$prk = hash_hmac($digest, $key, $salt, TRUE);
 		$key = '';

@@ -481,7 +481,7 @@ class CI_DB_oci8_driver extends CI_DB {
 		// oci_error() returns an array that already contains
 		// 'code' and 'message' keys, but it can return false
 		// if there was no error ....
-		if (is_resource($this->conn_id))
+		if (is_resource($this->conn_id) OR is_object($this->conn_id))
 		{
 			$error = oci_error($this->conn_id);
 		}
@@ -593,7 +593,7 @@ class CI_DB_oci8_driver extends CI_DB {
 	 */
 	protected function _close()
 	{
-		if (is_resource($this->result_id))
+		if (is_resource($this->result_id) OR is_object($this->result_id))
 		{
 			oci_free_statement($this->result_id);
 		}

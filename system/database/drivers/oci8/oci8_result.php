@@ -149,7 +149,7 @@ class CI_DB_oci8_result extends CI_DB_result {
 	 */
 	public function free_result()
 	{
-		if (is_resource($this->result_id))
+		if (is_resource($this->result_id) OR is_object($this->result_id))
 		{
 			oci_free_statement($this->result_id);
 			$this->result_id = FALSE;

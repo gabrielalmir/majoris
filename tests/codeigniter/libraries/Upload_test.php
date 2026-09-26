@@ -77,8 +77,8 @@ class Upload_test extends CI_TestCase {
 
 		foreach ($data as $k => $v)
 		{
-			// file_path and full_path are derived from upload_path
-			in_array($k, array('file_path', 'full_path'), TRUE) OR $this->upload->{$k} = $v;
+			// Some values (e.g. file_path, raw_name) are derived by data()
+			property_exists($this->upload, $k) && $this->upload->{$k} = $v;
 		}
 
 		$this->assertEquals('hello.txt', $this->upload->data('file_name'));
