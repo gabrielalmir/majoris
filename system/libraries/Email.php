@@ -2295,9 +2295,9 @@ class CI_Email {
 		$raw_data = '';
 		is_array($include) OR $include = array($include);
 
-		in_array('headers', $include, TRUE) && $raw_data  = htmlspecialchars($this->_header_str)."\n";
-		in_array('subject', $include, TRUE) && $raw_data .= htmlspecialchars($this->_subject)."\n";
-		in_array('body', $include, TRUE)    && $raw_data .= htmlspecialchars($this->_finalbody);
+		in_array('headers', $include, TRUE) && $raw_data  = htmlspecialchars($this->_header_str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401)."\n";
+		in_array('subject', $include, TRUE) && $raw_data .= htmlspecialchars($this->_subject, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401)."\n";
+		in_array('body', $include, TRUE)    && $raw_data .= htmlspecialchars($this->_finalbody, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401);
 
 		return $msg.($raw_data === '' ? '' : '<pre>'.$raw_data.'</pre>');
 	}

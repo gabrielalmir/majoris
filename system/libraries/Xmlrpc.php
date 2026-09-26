@@ -1147,7 +1147,7 @@ class XML_RPC_Message extends CI_Xmlrpc
 		// Display HTTP content for debugging
 		if ($this->debug === TRUE)
 		{
-			echo "<pre>---DATA---\n".htmlspecialchars($data)."\n---END DATA---\n\n</pre>";
+			echo "<pre>---DATA---\n".htmlspecialchars($data, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401)."\n---END DATA---\n\n</pre>";
 		}
 
 		// Check for data
@@ -1239,7 +1239,7 @@ class XML_RPC_Message extends CI_Xmlrpc
 				echo "---END HEADERS---\n\n";
 			}
 
-			echo "---DATA---\n".htmlspecialchars($data)."\n---END DATA---\n\n---PARSED---\n";
+			echo "---DATA---\n".htmlspecialchars($data, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401)."\n---END DATA---\n\n---PARSED---\n";
 			var_dump($this->xh[$pname]['value']);
 			echo "\n---END PARSED---</pre>";
 		}
@@ -1866,7 +1866,7 @@ class XML_RPC_Values extends CI_Xmlrpc
 						$rs .= '<'.$typ.'>'.( (bool) $val ? '1' : '0').'</'.$typ.">\n";
 						break;
 					case $this->xmlrpcString:
-						$rs .= '<'.$typ.'>'.htmlspecialchars( (string) $val).'</'.$typ.">\n";
+						$rs .= '<'.$typ.'>'.htmlspecialchars( (string) $val, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401).'</'.$typ.">\n";
 						break;
 					default:
 						$rs .= '<'.$typ.'>'.$val.'</'.$typ.">\n";
