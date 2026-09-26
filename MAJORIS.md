@@ -23,7 +23,7 @@ Baseline: `91692f5b0` (CodeIgniter 3.2.0-dev com os ajustes de PHP 7.4–8.5). S
 
 ## Onde estamos
 
-O suíte PHPUnit cobre PostgreSQL e SQLite (e MySQL) em Ubuntu, PHP 7.4–8.5. Não há job de SQL Server.
+O suíte PHPUnit cobre PostgreSQL e SQLite (e MySQL) em Ubuntu. A Action roda só PHP 7.4 e 8.5.
 
 | Motor | O que já funciona | O que o código faz hoje |
 |---|---|---|
@@ -59,7 +59,7 @@ Falha de `sqlsrv_connect` inclui o texto de `sqlsrv_errors()` na mensagem já ex
 
 **Drivers extintos.** `dbdriver` `mysql` ou `mssql` produz uma mensagem explícita: a extensão saiu no PHP 7; usar `mysqli` ou `sqlsrv`. Os arquivos desses drivers permanecem. cubrid, ibase, oci8 e odbc ficam como estão.
 
-**Pronto quando.** No SQL Server 2019, com `sqlsrv` e com `pdo_sqlsrv`: a conexão sobe com `TrustServerCertificate`; `insert_id()` devolve o identity; `LIMIT` sem `ORDER BY` executa; `num_rows()` no cursor padrão não materializa o result; PHP 7.4 e uma versão 8.x verdes.
+**Pronto quando.** No SQL Server 2019, com `sqlsrv` e com `pdo_sqlsrv`: a conexão sobe com `TrustServerCertificate`; `insert_id()` devolve o identity; `LIMIT` sem `ORDER BY` executa; `num_rows()` no cursor padrão não materializa o result; PHP 7.4 e 8.5 verdes.
 
 ---
 
@@ -80,7 +80,7 @@ Arquivos: `system/database/drivers/sqlite3/sqlite3_driver.php`, `system/database
 - `wal` e `foreign_keys`, ambos default desligados. Ligados, executam `PRAGMA journal_mode=WAL` e `PRAGMA foreign_keys=ON` depois do connect.
 - Sessão em tabela SQLite toma `flock` exclusivo num arquivo ao lado do `.sqlite` (`<db>.ci_session_<md5 do id>.lock`), com o mesmo `sess_lock_wait`. O lock não é `BEGIN IMMEDIATE` na conexão da aplicação: isso reservaria o arquivo inteiro e travaria os writes do request. SQLite é um nó só; flock cobre esse caso. SQL Server e PostgreSQL continuam com lock no servidor, válido para mais de um Apache.
 
-**Pronto quando.** PostgreSQL: espera de lock configurável e `insert_id()` sem sequência devolve `0`. SQLite: `busy_timeout` honrado, WAL e foreign keys só quando ligados, duas escritas de sessão concorrentes não se perdem. Testes na matriz que já existe (PostgreSQL e SQLite, PHP 7.4 e 8.x).
+**Pronto quando.** PostgreSQL: espera de lock configurável e `insert_id()` sem sequência devolve `0`. SQLite: `busy_timeout` honrado, WAL e foreign keys só quando ligados, duas escritas de sessão concorrentes não se perdem. Testes na matriz da Action (PostgreSQL e SQLite, PHP 7.4 e 8.5).
 
 ---
 
@@ -93,9 +93,9 @@ Arquivos: `system/libraries/Session/Session.php`, `system/libraries/Session/driv
 - Lock de sessão no SQL Server: `sp_getapplock` com `@LockOwner = 'Session'` e `@LockTimeout` derivado de `sess_lock_wait` (default `0`, espera, porque hoje não há lock). Liberação com `sp_releaseapplock`. O batch começa com `SET NOCOUNT ON`, que o driver já executa sem cursor scrollable. `is_write_type()` não muda: `EXEC` e `WITH` continuam podendo devolver result set.
 - `save_queries_limit` (int, default `0` = sem limite). Acima de zero, `DB_driver` guarda só as últimas N queries e tempos. `last_query()` segue sendo a última. O profiler mostra a janela.
 
-**CI.** Um job com `mcr.microsoft.com/mssql/server:2019-latest`, PHP 7.4 e uma versão 8.x, drivers `sqlsrv` e `pdo_sqlsrv`. Cobre conexão com `TrustServerCertificate`, `insert_id`, `LIMIT` sem `ORDER BY`, `num_rows` e duas requests concorrentes na mesma sessão. Os testes novos de PostgreSQL e SQLite entram na matriz atual, sem imagem nova e sem runner Windows.
+**CI.** Um job com `mcr.microsoft.com/mssql/server:2019-latest`, PHP 7.4 e 8.5, drivers `sqlsrv` e `pdo_sqlsrv`. Cobre conexão com `TrustServerCertificate`, `insert_id`, `LIMIT` sem `ORDER BY`, `num_rows` e duas requests concorrentes na mesma sessão. Os testes novos de PostgreSQL e SQLite entram na matriz atual, sem imagem nova e sem runner Windows.
 
-**Pronto quando.** `close()` libera o lock; `sess_auto_close` default deixa o request igual ao de hoje; o job de SQL Server 2019 verde nos dois drivers; suíte existente verde em PHP 7.4 e 8.x.
+**Pronto quando.** `close()` libera o lock; `sess_auto_close` default deixa o request igual ao de hoje; o job de SQL Server 2019 verde nos dois drivers; suíte existente verde em PHP 7.4 e 8.5.
 
 ---
 
