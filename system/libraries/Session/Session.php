@@ -312,6 +312,10 @@ class CI_Session {
 		$params['match_ip'] = (bool) (isset($params['match_ip']) ? $params['match_ip'] : config_item('sess_match_ip'));
 
 		isset($params['save_path']) OR $params['save_path'] = config_item('sess_save_path');
+		isset($params['lock_wait']) OR $params['lock_wait'] = config_item('sess_lock_wait');
+		isset($params['lock_retry_ms']) OR $params['lock_retry_ms'] = config_item('sess_lock_retry_ms');
+		isset($params['auto_close']) OR $params['auto_close'] = config_item('sess_auto_close');
+		$params['auto_close'] = $this->_auto_close_setting($params['auto_close']);
 
 		$this->_config = $params;
 
@@ -322,6 +326,35 @@ class CI_Session {
 		ini_set('session.use_only_cookies', 1);
 
 		$this->_configure_sid_length();
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Auto-close setting
+	 *
+	 * Validates 'sess_auto_close'. A missing key is FALSE.
+	 *
+	 * @param	mixed	$value
+	 * @return	bool
+	 */
+	protected function _auto_close_setting($value)
+	{
+		if ($value === NULL)
+		{
+			return FALSE;
+		}
+
+		if (in_array($value, array(TRUE, 1, '1'), TRUE))
+		{
+			return TRUE;
+		}
+		elseif (in_array($value, array(FALSE, 0, '0'), TRUE))
+		{
+			return FALSE;
+		}
+
+		throw new Exception('Session: "sess_auto_close" must be TRUE, FALSE, 1, 0, \'1\' or \'0\'; got '.var_export($value, TRUE).'.');
 	}
 
 	// ------------------------------------------------------------------------
@@ -677,6 +710,41 @@ class CI_Session {
 	public function sess_destroy()
 	{
 		session_destroy();
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Close
+	 *
+	 * Writes the session data and releases the driver's lock, so that
+	 * other requests for the same session don't wait for this one to end.
+	 * $_SESSION stays readable, but changes made to it afterwards are not
+	 * saved. Does nothing if no session is open.
+	 *
+	 * @return	void
+	 */
+	public function close()
+	{
+		if (session_status() === PHP_SESSION_ACTIVE)
+		{
+			session_write_close();
+		}
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Auto-close enabled
+	 *
+	 * Whether 'sess_auto_close' asks for close() to be called once the
+	 * controller method returns.
+	 *
+	 * @return	bool
+	 */
+	public function auto_close_enabled()
+	{
+		return ! empty($this->_config['auto_close']);
 	}
 
 	// ------------------------------------------------------------------------

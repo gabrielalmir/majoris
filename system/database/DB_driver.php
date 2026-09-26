@@ -252,6 +252,18 @@ abstract class CI_DB_driver {
 	public $query_times		= array();
 
 	/**
+	 * Saved queries limit
+	 *
+	 * How many of the most recent queries (and their times) are kept
+	 * when $save_queries is enabled. 0 keeps all of them. A string of
+	 * digits, as config values often are, is accepted too.
+	 *
+	 * @see	CI_DB_driver::$save_queries
+	 * @var	int|string
+	 */
+	public $save_queries_limit	= 0;
+
+	/**
 	 * Data cache
 	 *
 	 * An internal generic value cache.
@@ -458,9 +470,25 @@ abstract class CI_DB_driver {
 			// We still don't have a connection?
 			if ( ! $this->conn_id)
 			{
-				throw new RuntimeException('Unable to connect to the database.');
+				$message = (string) $this->_connect_error_message();
+				throw new RuntimeException('Unable to connect to the database.'.($message === '' ? '' : ' '.$message));
 			}
 		}
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Connection error message
+	 *
+	 * Driver text appended to the connection failure message.
+	 * Drivers whose error() is safe without a connection override this.
+	 *
+	 * @return	string
+	 */
+	protected function _connect_error_message()
+	{
+		return '';
 	}
 
 	// --------------------------------------------------------------------
@@ -601,7 +629,11 @@ abstract class CI_DB_driver {
 	 */
 	public function query($sql, $binds = FALSE, $return_object = NULL)
 	{
-		if ($sql === '')
+		if (($save_queries_limit = $this->_save_queries_limit()) === FALSE)
+		{
+			throw new RuntimeException("Invalid 'save_queries_limit' setting: expected a whole number, 0 or greater; got ".var_export($this->save_queries_limit, TRUE).'.');
+		}
+		elseif ($sql === '')
 		{
 			log_message('error', 'Invalid query: '.$sql);
 			return ($this->db_debug) ? $this->display_error('db_invalid_query') : FALSE;
@@ -649,6 +681,7 @@ abstract class CI_DB_driver {
 			if ($this->save_queries === TRUE)
 			{
 				$this->query_times[] = 0;
+				$this->_trim_saved_queries($save_queries_limit);
 			}
 
 			// This will trigger a rollback if transactions are being used
@@ -694,6 +727,7 @@ abstract class CI_DB_driver {
 		if ($this->save_queries === TRUE)
 		{
 			$this->query_times[] = $time_end - $time_start;
+			$this->_trim_saved_queries($save_queries_limit);
 		}
 
 		// Increment the query counter
@@ -738,6 +772,57 @@ abstract class CI_DB_driver {
 		}
 
 		return $RES;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Saved queries limit
+	 *
+	 * Validates $save_queries_limit.
+	 *
+	 * @return	int|bool	The limit; FALSE if the setting is not a whole number, 0 or greater
+	 */
+	protected function _save_queries_limit()
+	{
+		$limit = $this->save_queries_limit;
+
+		if (is_int($limit))
+		{
+			return ($limit >= 0) ? $limit : FALSE;
+		}
+
+		return (is_string($limit) && ctype_digit($limit))
+			? (int) $limit
+			: FALSE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Trim saved queries
+	 *
+	 * Keeps only the last $limit entries of $queries and $query_times.
+	 *
+	 * @param	int	$limit	0 keeps every entry
+	 * @return	void
+	 */
+	protected function _trim_saved_queries($limit)
+	{
+		if ($limit === 0)
+		{
+			return;
+		}
+
+		if (count($this->queries) > $limit)
+		{
+			$this->queries = array_slice($this->queries, -$limit);
+		}
+
+		if (count($this->query_times) > $limit)
+		{
+			$this->query_times = array_slice($this->query_times, -$limit);
+		}
 	}
 
 	// --------------------------------------------------------------------

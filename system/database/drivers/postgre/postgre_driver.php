@@ -344,9 +344,11 @@ class CI_DB_postgre_driver extends CI_DB {
 
 		$table	= (func_num_args() > 0) ? func_get_arg(0) : NULL;
 		$column	= (func_num_args() > 1) ? func_get_arg(1) : NULL;
+		$ins_id	= FALSE;
 
 		if ($table === NULL && $v >= '8.1')
 		{
+			$ins_id = $this->_lastval();
 			$sql = 'SELECT LASTVAL() AS ins_id';
 		}
 		elseif ($table !== NULL)
@@ -371,9 +373,132 @@ class CI_DB_postgre_driver extends CI_DB {
 			return pg_last_oid($this->result_id);
 		}
 
-		$query = $this->query($sql);
-		$query = $query->row();
-		return (int) $query->ins_id;
+		if ($ins_id === FALSE)
+		{
+			$query = $this->query($sql);
+			$query = $query->row();
+			$ins_id = $query->ins_id;
+		}
+
+		return (int) $ins_id;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * LASTVAL() outside of query()
+	 *
+	 * A session that has not used a sequence yet makes LASTVAL() fail
+	 * with SQLSTATE 55000. That is reported as 0, like MySQL and SQLite
+	 * do, without going through db_debug or the transaction status.
+	 * Inside a transaction block the statement runs under a savepoint,
+	 * so that the failure does not abort the block.
+	 *
+	 * @return	int|bool	FALSE on any other failure, which is then left to query()
+	 */
+	protected function _lastval()
+	{
+		if (($savepoint = $this->_transaction_block()) === NULL)
+		{
+			return FALSE;
+		}
+
+		if ($savepoint)
+		{
+			$result = $this->_quiet_query('SAVEPOINT ci_insert_id');
+			if ($result === FALSE OR $result[0] !== '00000')
+			{
+				return FALSE;
+			}
+		}
+
+		$lastval = $this->_quiet_query('SELECT LASTVAL()');
+
+		if ($savepoint)
+		{
+			$ends = ($lastval !== FALSE && $lastval[0] === '00000')
+				? array('RELEASE SAVEPOINT ci_insert_id')
+				: array('ROLLBACK TO SAVEPOINT ci_insert_id', 'RELEASE SAVEPOINT ci_insert_id');
+
+			foreach ($ends as $end)
+			{
+				$result = $this->_quiet_query($end);
+				if ($result === FALSE OR $result[0] !== '00000')
+				{
+					return FALSE;
+				}
+			}
+		}
+
+		if ($lastval === FALSE)
+		{
+			return FALSE;
+		}
+		elseif ($lastval[0] === '00000')
+		{
+			return (int) $lastval[1];
+		}
+
+		return ($lastval[0] === '55000') ? 0 : FALSE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Transaction block state of the connection
+	 *
+	 * @return	bool|null	TRUE inside a block, FALSE when idle, NULL otherwise
+	 */
+	protected function _transaction_block()
+	{
+		switch (pg_transaction_status($this->conn_id))
+		{
+			case PGSQL_TRANSACTION_IDLE:
+				return FALSE;
+			case PGSQL_TRANSACTION_INTRANS:
+				return TRUE;
+			default:
+				return NULL;
+		}
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Run a statement without query()
+	 *
+	 * pg_send_query() reports a failed statement through its result,
+	 * without a PHP warning. Nothing is logged, db_debug is not
+	 * consulted and the transaction status is left alone.
+	 *
+	 * @param	string	$sql
+	 * @return	array|bool	array(SQLSTATE, first column of the first row), FALSE if not sent
+	 */
+	protected function _quiet_query($sql)
+	{
+		if ( ! pg_send_query($this->conn_id, $sql) OR ($result = pg_get_result($this->conn_id)) === FALSE)
+		{
+			return FALSE;
+		}
+
+		// Leave the connection ready for the next statement
+		do
+		{
+			/** @var resource|object|false $pending */
+			$pending = pg_get_result($this->conn_id);
+		}
+		while ($pending !== FALSE);
+
+		if ( ! in_array(pg_result_status($result), array(PGSQL_COMMAND_OK, PGSQL_TUPLES_OK), TRUE))
+		{
+			$sqlstate = pg_result_error_field($result, PGSQL_DIAG_SQLSTATE);
+			pg_free_result($result);
+			return array(is_string($sqlstate) ? $sqlstate : '', NULL);
+		}
+
+		$value = (pg_num_rows($result) > 0) ? pg_fetch_result($result, 0, 0) : NULL;
+		pg_free_result($result);
+		return array('00000', $value);
 	}
 
 	// --------------------------------------------------------------------

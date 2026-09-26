@@ -114,6 +114,7 @@ class Date_helper_test extends CI_TestCase {
 
 	public function test_mysql_to_unix()
 	{
+		// phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved -- mysql_to_unix é função do CI, não a extensão mysql
 		$this->assertEquals($this->time, mysql_to_unix(date('Y-m-d H:i:s', $this->time)));
 	}
 

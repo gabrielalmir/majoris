@@ -479,6 +479,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
  * ------------------------------------------------------
+ *  Close the session, if 'sess_auto_close' is on
+ * ------------------------------------------------------
+ */
+	if (isset($CI->session) && $CI->session instanceof CI_Session && $CI->session->auto_close_enabled())
+	{
+		$CI->session->close();
+	}
+
+/*
+ * ------------------------------------------------------
  *  Send the final rendered output to the browser
  * ------------------------------------------------------
  */

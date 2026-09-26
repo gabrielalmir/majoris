@@ -60,6 +60,36 @@ class CI_DB_pdo_sqlite_driver extends CI_DB_pdo_driver {
 	 */
 	public $subdriver = 'sqlite';
 
+	/**
+	 * Busy timeout, in milliseconds
+	 *
+	 * 0 leaves the connection default of pdo_sqlite.
+	 *
+	 * @var	int|string
+	 */
+	public $busy_timeout = 0;
+
+	/**
+	 * Run PRAGMA journal_mode=WAL after connecting
+	 *
+	 * @var	bool
+	 */
+	public $wal = FALSE;
+
+	/**
+	 * Run PRAGMA foreign_keys=ON after connecting
+	 *
+	 * @var	bool
+	 */
+	public $foreign_keys = FALSE;
+
+	/**
+	 * Why the last db_connect() failed
+	 *
+	 * @var	string|null
+	 */
+	protected $_connect_error;
+
 	// --------------------------------------------------------------------
 
 	/**
@@ -94,6 +124,158 @@ class CI_DB_pdo_sqlite_driver extends CI_DB_pdo_driver {
 
 			$this->database = empty($this->database) ? $this->hostname : $this->database;
 		}
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Database connection
+	 *
+	 * @param	bool	$persistent
+	 * @return	object|bool
+	 */
+	public function db_connect($persistent = FALSE)
+	{
+		$this->_connect_error = NULL;
+
+		try
+		{
+			$pragmas = $this->_connect_pragmas();
+		}
+		catch (InvalidArgumentException $e)
+		{
+			$this->_connect_error = $e->getMessage();
+			return FALSE;
+		}
+
+		$conn_id = parent::db_connect($persistent);
+		if ( ! $conn_id instanceof PDO)
+		{
+			return $conn_id;
+		}
+
+		try
+		{
+			$this->_run_pragmas($conn_id, $pragmas);
+			return $conn_id;
+		}
+		catch (RuntimeException $e)
+		{
+			$this->_connect_error = $e->getMessage();
+			return FALSE;
+		}
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Connection PRAGMAs
+	 *
+	 * Validates busy_timeout, wal and foreign_keys and returns the
+	 * statements to run after connecting, each mapped to the value
+	 * it must return (NULL when any is fine). The defaults return none.
+	 *
+	 * PRAGMA busy_timeout is used instead of PDO::ATTR_TIMEOUT,
+	 * which pdo_sqlite reads as seconds.
+	 *
+	 * @return	array
+	 * @throws	InvalidArgumentException	On an invalid setting
+	 */
+	protected function _connect_pragmas()
+	{
+		$pragmas = array();
+
+		$busy_timeout = $this->busy_timeout;
+		if (is_string($busy_timeout) && preg_match('/^[0-9]{1,10}$/', $busy_timeout))
+		{
+			$busy_timeout = (int) $busy_timeout;
+		}
+
+		if ( ! is_int($busy_timeout) OR $busy_timeout < 0 OR $busy_timeout > 2147483647)
+		{
+			throw new InvalidArgumentException("Invalid 'busy_timeout' setting: expected an integer number of milliseconds from 0 to 2147483647, got ".var_export($this->busy_timeout, TRUE).'.');
+		}
+		elseif ($busy_timeout > 0)
+		{
+			$pragmas['PRAGMA busy_timeout = '.$busy_timeout] = NULL;
+		}
+
+		foreach (array('wal' => 'PRAGMA journal_mode = WAL', 'foreign_keys' => 'PRAGMA foreign_keys = ON') as $key => $sql)
+		{
+			if ( ! in_array($this->$key, array(TRUE, FALSE, 1, 0, '1', '0'), TRUE))
+			{
+				throw new InvalidArgumentException("Invalid '".$key."' setting: expected TRUE or FALSE, got ".var_export($this->$key, TRUE).'.');
+			}
+			elseif ((bool) $this->$key)
+			{
+				$pragmas[$sql] = ($key === 'wal') ? 'wal' : NULL;
+			}
+		}
+
+		return $pragmas;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Run the connection PRAGMAs
+	 *
+	 * @param	PDO	$conn_id
+	 * @param	array	$pragmas	From _connect_pragmas()
+	 * @return	void
+	 * @throws	RuntimeException	When a PRAGMA fails
+	 */
+	protected function _run_pragmas($conn_id, $pragmas)
+	{
+		foreach ($pragmas as $sql => $expected)
+		{
+			if (($statement = $conn_id->query($sql)) === FALSE)
+			{
+				$error = $conn_id->errorInfo();
+				throw new RuntimeException($sql.' failed: '.(isset($error[2]) ? $error[2] : $error[0]));
+			}
+
+			$result = $statement->fetchColumn();
+			// A PRAGMA that returns a row keeps its statement active until the cursor is closed
+			$statement->closeCursor();
+
+			if ($expected !== NULL && strtolower((string) $result) !== $expected)
+			{
+				throw new RuntimeException($sql.' failed: journal_mode is '.var_export($result, TRUE).'.');
+			}
+		}
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Error
+	 *
+	 * Returns an array containing code and message of the last
+	 * database error that has occurred.
+	 *
+	 * @return	array
+	 */
+	public function error()
+	{
+		if (isset($this->_connect_error))
+		{
+			return array('code' => 'HY000', 'message' => $this->_connect_error);
+		}
+
+		return parent::error();
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Connection error message
+	 *
+	 * @return	string
+	 */
+	protected function _connect_error_message()
+	{
+		return isset($this->_connect_error) ? $this->_connect_error : '';
 	}
 
 	// --------------------------------------------------------------------

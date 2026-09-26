@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit
+	bootstrap="../../Bootstrap.php"
+	colors="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	convertDeprecationsToExceptions="true"
+	stopOnError="false"
+	stopOnFailure="false"
+	stopOnIncomplete="false"
+	stopOnSkipped="false"
+	beStrictAboutTestsThatDoNotTestAnything="false">
+	<php>
+        <const name="DB_DRIVER" value="pdo/sqlsrv"/>
+    </php>
+	<testsuites>
+		<testsuite name="CodeIgniter SQL Server Test Suite">
+			<file>../../codeigniter/database/sqlsrv_server_test.php</file>
+		</testsuite>
+	</testsuites>
+	<filter>
+        <whitelist addUncoveredFilesFromWhitelist="false">
+            <directory suffix=".php">../../../system</directory>
+        </whitelist>
+	</filter>
+</phpunit>

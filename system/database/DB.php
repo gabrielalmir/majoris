@@ -163,6 +163,12 @@ function &DB($params = '')
 		class CI_DB extends CI_DB_query_builder {}
 	}
 
+	if (in_array($params['dbdriver'], array('mysql', 'mssql'), TRUE))
+	{
+		show_error('The '.$params['dbdriver'].' extension was removed in PHP 7; use the '
+			.($params['dbdriver'] === 'mysql' ? 'mysqli' : 'sqlsrv').' database driver instead.');
+	}
+
 	// Load the DB driver
 	$driver_file = BASEPATH.'database/drivers/'.$params['dbdriver'].'/'.$params['dbdriver'].'_driver.php';
 	file_exists($driver_file) OR show_error('Invalid DB driver');

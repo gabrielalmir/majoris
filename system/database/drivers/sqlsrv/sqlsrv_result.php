@@ -80,8 +80,7 @@ class CI_DB_sqlsrv_result extends CI_DB_result {
 	 */
 	public function num_rows()
 	{
-		// sqlsrv_num_rows() doesn't work with the FORWARD and DYNAMIC cursors (FALSE is the same as FORWARD)
-		if ( ! in_array($this->scrollable, array(FALSE, SQLSRV_CURSOR_FORWARD, SQLSRV_CURSOR_DYNAMIC), TRUE))
+		if ( ! $this->_cursor_has_native_count())
 		{
 			return parent::num_rows();
 		}
@@ -89,6 +88,25 @@ class CI_DB_sqlsrv_result extends CI_DB_result {
 		return is_int($this->num_rows)
 			? $this->num_rows
 			: $this->num_rows = sqlsrv_num_rows($this->result_id);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Whether the cursor supports sqlsrv_num_rows()
+	 *
+	 * Client-buffered, static and keyset cursors know their row count.
+	 * Forward and dynamic cursors (FALSE is the same as forward) don't,
+	 * so their rows have to be counted by reading them.
+	 *
+	 * The literals are the values of the SQLSRV_CURSOR_CLIENT_BUFFERED,
+	 * SQLSRV_CURSOR_STATIC and SQLSRV_CURSOR_KEYSET constants.
+	 *
+	 * @return	bool
+	 */
+	protected function _cursor_has_native_count()
+	{
+		return in_array($this->scrollable, array('buffered', 'static', 'keyset'), TRUE);
 	}
 
 	// --------------------------------------------------------------------
