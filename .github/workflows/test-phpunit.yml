@@ -11,6 +11,7 @@ permissions:
 jobs:
   tests:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
     env:
       PHP_INI_VALUES: assert.exception=1, zend.assertions=1
@@ -68,13 +69,21 @@ jobs:
       - name: Install composer dependencies
         run: composer update --no-progress --prefer-dist --optimize-autoloader
 
+      - name: Wait until MySQL accepts queries
+        if: contains(matrix.DB, 'mysql')
+        timeout-minutes: 2
+        run: |
+          php -r '$ok = FALSE; for ($i = 0; $i < 30; $i++) { $db = @new mysqli("127.0.0.1", "travis", "travis", "ci_test", 3306); if ($db && ! $db->connect_errno && $db->query("SELECT 1")) { $ok = TRUE; break; } sleep(2); } exit($ok ? 0 : 1);'
+
       - name: PHPUnit Test
+        timeout-minutes: 5
         run: |
           php -d error_reporting=E_ALL -d zend.enable_gc=0 -d date.timezone=UTC vendor/bin/phpunit --configuration tests/travis/${{ matrix.DB }}.phpunit.xml
 
   sqlsrv:
     name: SQL Server 2019 - PHP${{ matrix.php }} - ${{ matrix.driver }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
     env:
       PHP_INI_VALUES: assert.exception=1, zend.assertions=1
@@ -143,6 +152,7 @@ jobs:
         run: /opt/mssql-tools18/bin/sqlcmd -C -S "$SQLSRV_HOST" -U "$SQLSRV_USER" -P "$SQLSRV_PASSWORD" -b -Q "IF DB_ID('$SQLSRV_DATABASE') IS NULL CREATE DATABASE [$SQLSRV_DATABASE]"
 
       - name: PHPUnit Test
+        timeout-minutes: 5
         run: |
           php --ri ${{ matrix.driver == 'sqlsrv' && 'sqlsrv' || 'pdo_sqlsrv' }}
-          php -d error_reporting=E_ALL -d zend.enable_gc=0 -d date.timezone=UTC vendor/bin/phpunit --configuration tests/travis/${{ matrix.driver }}.phpunit.xml
+          timeout 180 php -d error_reporting=E_ALL -d zend.enable_gc=0 -d date.timezone=UTC vendor/bin/phpunit --configuration tests/travis/${{ matrix.driver }}.phpunit.xml

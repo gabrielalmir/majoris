@@ -306,7 +306,11 @@ CHILD
 	 */
 	protected function finish_child(array $child)
 	{
-		fwrite($child[1][0], "exit\n");
+		$status = proc_get_status($child[0]);
+		if ($status['running'])
+		{
+			fwrite($child[1][0], "exit\n");
+		}
 		fclose($child[1][0]);
 
 		$stdout = stream_get_contents($child[1][1]);

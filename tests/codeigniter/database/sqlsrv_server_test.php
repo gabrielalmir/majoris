@@ -210,13 +210,14 @@ class sqlsrv_server_test extends CI_TestCase {
 			'data' => 'user|s:5:"alice";'
 		));
 
-		$params = array('save_path' => 'ci_server_sessions', 'match_ip' => FALSE);
+		$params = array('save_path' => 'ci_server_sessions', 'match_ip' => FALSE, 'lock_wait' => 5);
 
 		// Each driver takes the connection that is $CI->db when it is built
 		$this->ci_instance_var('db', $first_db);
 		$first = new CI_Session_database_driver($params);
 
-		$second_params = $params + array('lock_wait' => 1);
+		$second_params = $params;
+		$second_params['lock_wait'] = 1;
 		$this->ci_instance_var('db', $second_db);
 		$second = new CI_Session_database_driver($second_params);
 
