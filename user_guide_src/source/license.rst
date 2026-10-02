@@ -2,6 +2,9 @@
 The MIT License (MIT)
 #####################
 
+Majoris distributes this code under the MIT license below. The copyright
+notice stays with the CodeIgniter Foundation and the earlier contributors.
+
 Copyright (c) 2019 - 2022, CodeIgniter Foundation
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -2,6 +2,10 @@
 Change Log
 ##########
 
+Entries below are the inherited CodeIgniter 3 changelog. They are not a
+Majoris release history. Behavior added in this repository is described
+in ``MAJORIS.md``.
+
 Version 3.2.0
 =============
 

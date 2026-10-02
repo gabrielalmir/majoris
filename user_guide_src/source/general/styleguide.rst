@@ -345,10 +345,9 @@ inability for CodeIgniter to send proper headers.
 Compatibility
 =============
 
-CodeIgniter recommends PHP 5.6 or newer to be used, but it should be
-compatible with PHP 5.4.8. Your code must either be compatible with this
-requirement, provide a suitable fallback, or be an optional feature that
-dies quietly without affecting a user's application.
+Majoris requires PHP 7.4 and must stay valid through PHP 8.5. Do not
+use syntax or functions added after 7.4. An existing public method does
+not gain a parameter or return type. A new method may use a scalar type.
 
 Additionally, do not use PHP functions that require non-default libraries
 to be installed unless your code contains an alternative method when the

@@ -1,14 +1,12 @@
 {
-	"description": "The CodeIgniter framework",
+	"description": "Majoris, a drop-in base of CodeIgniter 3",
 	"name": "codeigniter/framework",
 	"type": "project",
-	"homepage": "https://codeigniter.com",
+	"homepage": "https://github.com/gabrielalmir/majoris",
 	"license": "MIT",
 	"support": {
-		"forum": "https://forum.codeigniter.com/",
-		"wiki": "https://github.com/bcit-ci/CodeIgniter/wiki",
-		"slack": "https://codeigniterchat.slack.com",
-		"source": "https://github.com/bcit-ci/CodeIgniter"
+		"issues": "https://github.com/gabrielalmir/majoris/issues",
+		"source": "https://github.com/gabrielalmir/majoris"
 	},
 	"require": {
 		"php": ">=7.4"

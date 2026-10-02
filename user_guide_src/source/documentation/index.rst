@@ -1,8 +1,8 @@
-#################################
-Writing CodeIgniter Documentation
-#################################
+#############################
+Writing Majoris Documentation
+#############################
 
-CodeIgniter uses Sphinx to generate its documentation in a variety of formats,
+This guide uses Sphinx to generate its documentation in a variety of formats,
 using reStructuredText to handle the formatting.  If you are familiar with
 Markdown or Textile, you will quickly grasp reStructuredText.  The focus is
 on readability and user friendliness.

@@ -15,8 +15,12 @@ In 2014, CodeIgniter was acquired by the `British Columbia Institute of Technolo
 <https://www.bcit.ca/>`_ and was then officially announced as a community-maintained
 project.
 
-Bleeding edge development is spearheaded by the handpicked contributors
-of the Reactor Team.
+Bleeding edge development of upstream CodeIgniter was spearheaded by the
+handpicked contributors of the Reactor Team.
+
+Majoris is a later drop-in of that code, maintained in
+https://github.com/gabrielalmir/majoris. It is not the CodeIgniter
+Foundation project and it does not replace these credits.
 
 A hat tip goes to Ruby on Rails for inspiring us to create a PHP framework, and
 for bringing frameworks into the general consciousness of the web community.

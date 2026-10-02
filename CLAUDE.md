@@ -13,6 +13,7 @@ Não assine trabalho de agent, modelo ou sessão:
 - Não defina `GIT_AUTHOR_*`, `GIT_COMMITTER_*`, `--author` nem identidade de bot.
 - Não use `Co-authored-by`, `Signed-off-by` de agent, "Generated with", "Made with" ou nome de modelo em commit, PR, PHPDoc, cabeçalho ou comentário.
 - Não grave id de sessão, URL de transcript ou rodapé de ferramenta.
+- Mensagem de commit segue Conventional Commits: `feat`, `fix`, `docs`, `chore`, `test`, `refactor` e afins. Sem mensagem solta.
 - Arquivo novo copia o cabeçalho de licença do vizinho no mesmo diretório.
 
 Vale para Claude, Codex, Grok e qualquer outro agente.

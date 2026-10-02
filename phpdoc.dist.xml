@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <phpdoc>
-	<title>CodeIgniter v3.0.0 API</title>
+	<title>Majoris API</title>
     <parser>
         <target>./api/</target>
     </parser>

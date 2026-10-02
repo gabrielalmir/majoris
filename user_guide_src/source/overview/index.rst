@@ -1,8 +1,9 @@
-####################
-CodeIgniter Overview
-####################
+################
+Majoris Overview
+################
 
-The following pages describe the broad concepts behind CodeIgniter:
+The following pages describe the CodeIgniter 3 model that Majoris keeps.
+Class names in those pages are the names the application already uses.
 
 .. toctree::
 	:titlesonly:

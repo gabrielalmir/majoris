@@ -2,20 +2,22 @@
 Server Requirements
 ###################
 
-`PHP <https://secure.php.net/>`_ version 5.6 or newer is recommended.
-
-It should work on 5.4.8 as well, but we strongly advise you NOT to run
-such old versions of PHP, because of potential security and performance
-issues, as well as missing features.
+`PHP <https://www.php.net/>`_ 7.4 through 8.5. PHP 7.4 is the floor.
+Older PHP versions are not supported.
 
 A database is required for most web application programming.
-Currently supported databases are:
+Drivers in this tree:
 
-  - MySQL (5.1+) via the *mysql* (deprecated), *mysqli* and *pdo* drivers
-  - Oracle via the *oci8* and *pdo* drivers
+  - MySQL via the *mysqli* and *pdo* drivers. The old *mysql* extension
+    left in PHP 7; do not select ``dbdriver`` ``mysql``.
+  - SQL Server via *sqlsrv* and *pdo*. The old *mssql* extension left in
+    PHP 7; do not select ``dbdriver`` ``mssql``.
   - PostgreSQL via the *postgre* and *pdo* drivers
-  - MS SQL via the *mssql*, *sqlsrv* (version 2005 and above only) and *pdo* drivers
   - SQLite via the *sqlite3* and *pdo* drivers
+  - Oracle via the *oci8* and *pdo* drivers
   - CUBRID via the *cubrid* and *pdo* drivers
   - Interbase/Firebird via the *ibase* and *pdo* drivers
-  - ODBC via the *odbc* and *pdo* drivers (you should know that ODBC is actually an abstraction layer)
+  - ODBC via the *odbc* and *pdo* drivers (ODBC is an abstraction layer)
+
+``mysqli`` keeps working. The active database work in this repository is
+SQL Server 2019, PostgreSQL and SQLite, described in ``MAJORIS.md``.

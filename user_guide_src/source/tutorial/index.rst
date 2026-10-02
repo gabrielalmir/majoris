@@ -2,9 +2,9 @@
 Tutorial
 ########
 
-This tutorial is intended to introduce you to the CodeIgniter framework
-and the basic principles of MVC architecture. It will show you how a
-basic CodeIgniter application is constructed in step-by-step fashion.
+This tutorial introduces the CodeIgniter 3 application model that
+Majoris keeps, and the basic principles of MVC. It shows how a basic
+application is constructed in step-by-step fashion.
 
 In this tutorial, you will be creating a **basic news application**. You
 will begin by writing the code that can load static pages. Next, you

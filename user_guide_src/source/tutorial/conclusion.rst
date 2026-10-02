@@ -17,10 +17,7 @@ the class and helper references when needed.
 Every intermediate PHP programmer should be able to get the hang of
 CodeIgniter within a few days.
 
-If you still have questions about the framework or your own CodeIgniter
-code, you can:
-
--  Check out our `forums <https://forum.codeigniter.com/>`_
--  Visit our `IRC chatroom <https://github.com/bcit-ci/CodeIgniter/wiki/IRC>`_
--  Explore the `Wiki <https://github.com/bcit-ci/CodeIgniter/wiki/>`_
+If you still have questions about this repository, open an issue on
+`gabrielalmir/majoris <https://github.com/gabrielalmir/majoris>`_.
+The CodeIgniter forums, IRC channel and wiki are the upstream project.
 
