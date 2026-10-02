@@ -875,7 +875,7 @@ class CI_Image_lib {
 			$this->library_path = rtrim($this->library_path, '/').'/convert';
 		}
 
-		$this->library_path = escapeshellarg($this->library_path);
+		$binary = escapeshellarg($this->library_path);
 
 		if ( ! preg_match('/^[0-9]{1,3}%?$/', (string) $this->quality))
 		{
@@ -895,10 +895,8 @@ class CI_Image_lib {
 			return FALSE;
 		}
 
-		$quality = rtrim((string) $this->quality, '%');
-
-		// Execute the command
-		$cmd = $this->library_path.' -quality '.$quality;
+		// Execute the command. Quality already matched a safe pattern.
+		$cmd = $binary.' -quality '.$this->quality;
 
 		if ($action === 'crop')
 		{

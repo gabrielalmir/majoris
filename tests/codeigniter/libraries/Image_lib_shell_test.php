@@ -90,10 +90,12 @@ class Image_lib_shell_test extends CI_TestCase {
 			unlink($this->sentinel);
 		}
 
-		$image = $this->create_image_lib('/missing-imagemagick; touch '.$this->sentinel.'; #');
+		$path = '/missing-imagemagick; touch '.$this->sentinel.'; #';
+		$image = $this->create_image_lib($path);
 
 		$this->assertFalse($image->image_process_imagemagick('resize'));
 		$this->assertFileDoesNotExist($this->sentinel);
+		$this->assertSame(rtrim($path, '/').'/convert', $image->library_path);
 	}
 
 	// --------------------------------------------------------------------
@@ -155,6 +157,25 @@ class Image_lib_shell_test extends CI_TestCase {
 		$image->image_type = 2;
 
 		$this->assertFalse($image->image_process_netpbm('rotate'));
+		$this->assertFileDoesNotExist($this->sentinel);
+	}
+
+	// --------------------------------------------------------------------
+
+	public function test_image_process_netpbm_escapes_dest_folder()
+	{
+		if (file_exists($this->sentinel))
+		{
+			unlink($this->sentinel);
+		}
+
+		$image = $this->create_image_lib('/missing-netpbm');
+		$this->netpbm_prefix = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ci_netpbm_'.getmypid().'_'.mt_rand();
+		$image->dest_folder = $this->netpbm_prefix.'; touch '.$this->sentinel.'; #';
+		$this->netpbm_temp_path = $image->dest_folder.'netpbm.tmp';
+		$image->image_type = 2;
+
+		$this->assertFalse($image->image_process_netpbm('resize'));
 		$this->assertFileDoesNotExist($this->sentinel);
 	}
 
