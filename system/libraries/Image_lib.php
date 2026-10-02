@@ -875,8 +875,28 @@ class CI_Image_lib {
 			$this->library_path = rtrim($this->library_path, '/').'/convert';
 		}
 
-		// Execute the command
-		$cmd = $this->library_path.' -quality '.$this->quality;
+		$binary = escapeshellarg($this->library_path);
+
+		if ( ! preg_match('/^[0-9]{1,3}%?$/', (string) $this->quality))
+		{
+			$this->set_error('imglib_image_process_failed');
+			return FALSE;
+		}
+
+		if ( ! preg_match('/^-?[0-9]+$/', (string) $this->width) OR ! preg_match('/^-?[0-9]+$/', (string) $this->height) OR ! preg_match('/^-?[0-9]+$/', (string) $this->x_axis) OR ! preg_match('/^-?[0-9]+$/', (string) $this->y_axis))
+		{
+			$this->set_error('imglib_image_process_failed');
+			return FALSE;
+		}
+
+		if ($action === 'rotate' AND $this->rotation_angle !== 'hor' AND $this->rotation_angle !== 'vrt' AND ! preg_match('/^-?[0-9]+$/', (string) $this->rotation_angle))
+		{
+			$this->set_error('imglib_image_process_failed');
+			return FALSE;
+		}
+
+		// Execute the command. Quality already matched a safe pattern.
+		$cmd = $binary.' -quality '.$this->quality;
 
 		if ($action === 'crop')
 		{
@@ -939,6 +959,18 @@ class CI_Image_lib {
 			return FALSE;
 		}
 
+		if ( ! preg_match('/^[0-9]{1,3}%?$/', (string) $this->quality))
+		{
+			$this->set_error('imglib_image_process_failed');
+			return FALSE;
+		}
+
+		if ( ! preg_match('/^-?[0-9]+$/', (string) $this->width) OR ! preg_match('/^-?[0-9]+$/', (string) $this->height) OR ! preg_match('/^-?[0-9]+$/', (string) $this->x_axis) OR ! preg_match('/^-?[0-9]+$/', (string) $this->y_axis))
+		{
+			$this->set_error('imglib_image_process_failed');
+			return FALSE;
+		}
+
 		// Build the resizing command
 		switch ($this->image_type)
 		{
@@ -958,6 +990,9 @@ class CI_Image_lib {
 				$cmd_in		= 'webptopnm';
 				$cmd_out	= 'ppmtowebp';
 				break;
+			default:
+				$this->set_error('imglib_image_process_failed');
+				return FALSE;
 		}
 
 		if ($action === 'crop')
@@ -966,6 +1001,8 @@ class CI_Image_lib {
 		}
 		elseif ($action === 'rotate')
 		{
+			$angle = '';
+
 			switch ($this->rotation_angle)
 			{
 				case 90:	$angle = 'r270';
@@ -978,6 +1015,9 @@ class CI_Image_lib {
 					break;
 				case 'hor':	$angle = 'lr';
 					break;
+				default:
+					$this->set_error('imglib_image_process_failed');
+					return FALSE;
 			}
 
 			$cmd_inner = 'pnmflip -'.$angle.' ';
@@ -987,7 +1027,7 @@ class CI_Image_lib {
 			$cmd_inner = 'pnmscale -xysize '.$this->width.' '.$this->height;
 		}
 
-		$cmd = $this->library_path.$cmd_in.' '.escapeshellarg($this->full_src_path).' | '.$cmd_inner.' | '.$cmd_out.' > '.$this->dest_folder.'netpbm.tmp';
+		$cmd = escapeshellarg(rtrim($this->library_path, '/').'/'.$cmd_in).' '.escapeshellarg($this->full_src_path).' | '.$cmd_inner.' | '.$cmd_out.' > '.escapeshellarg($this->dest_folder.'netpbm.tmp');
 
 		$retval = 1;
 		// exec() might be disabled
