@@ -96,4 +96,42 @@ class Url_helper_test extends CI_TestCase {
 			auto_link('this is some text that includes www.email@domain.com which is causing an issue')
 		);
 	}
+
+	// --------------------------------------------------------------------
+
+	public function test_redirect_header_uri()
+	{
+		$this->assertSame('https://example.com/ok', redirect_header_uri('https://example.com/ok'));
+		$this->assertSame('//example.com/ok', redirect_header_uri('//example.com/ok'));
+		$this->assertFalse(redirect_header_uri("https://example.com/ok\n"));
+		$this->assertFalse(redirect_header_uri("https://example.com/ok\r"));
+		$this->assertSame('https://example.com/%0aok', redirect_header_uri('https://example.com/%0aok'));
+	}
+
+	// --------------------------------------------------------------------
+
+	public function test_redirect_rejects_line_breaks()
+	{
+		$this->expectException('RuntimeException');
+		$this->expectExceptionMessage('CI Error: The redirect URI is not allowed.');
+
+		redirect("https://example.com/\nfoo");
+	}
+
+	// --------------------------------------------------------------------
+
+	public function test_redirect_rejects_line_breaks_after_site_url()
+	{
+		$this->ci_set_config(array(
+			'base_url' => 'http://example.com/',
+			'index_page' => '',
+			'enable_query_strings' => FALSE,
+			'url_suffix' => ''
+		));
+
+		$this->expectException('RuntimeException');
+		$this->expectExceptionMessage('CI Error: The redirect URI is not allowed.');
+
+		redirect("foo\nbar");
+	}
 }

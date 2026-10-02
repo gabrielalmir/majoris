@@ -504,6 +504,32 @@ if ( ! function_exists('url_title'))
 
 // ------------------------------------------------------------------------
 
+if ( ! function_exists('redirect_header_uri'))
+{
+	/**
+	 * Redirect Header URI
+	 *
+	 * Validate a redirect URI before it is sent in a response header.
+	 * Returns FALSE when the URI contains CR or LF.
+	 *
+	 * @param	string	$uri	URL
+	 * @return	string|FALSE
+	 */
+	function redirect_header_uri($uri)
+	{
+		$uri = (string) $uri;
+
+		if (strcspn($uri, "\r\n") !== strlen($uri))
+		{
+			return FALSE;
+		}
+
+		return $uri;
+	}
+}
+
+// ------------------------------------------------------------------------
+
 if ( ! function_exists('redirect'))
 {
 	/**
@@ -524,6 +550,13 @@ if ( ! function_exists('redirect'))
 		if ( ! preg_match('#^(\w+:)?//#i', (string) $uri))
 		{
 			$uri = site_url($uri);
+		}
+
+		$uri = redirect_header_uri($uri);
+
+		if ($uri === FALSE)
+		{
+			show_error('The redirect URI is not allowed.');
 		}
 
 		// IIS environment likely? Use 'refresh' for better compatibility
