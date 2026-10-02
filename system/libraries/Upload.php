@@ -1319,7 +1319,7 @@ class CI_Upload {
 			}
 		}
 
-		$this->file_type = $file['type'];
+		$this->file_type = '';
 	}
 
 }
