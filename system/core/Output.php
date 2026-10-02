@@ -688,7 +688,13 @@ class CI_Output {
 			return FALSE;
 		}
 
-		$cache_info = unserialize($match[1]);
+		$cache_info = unserialize($match[1], array('allowed_classes' => FALSE));
+
+		if ( ! is_array($cache_info) OR ! isset($cache_info['expire']))
+		{
+			return FALSE;
+		}
+
 		$expire = $cache_info['expire'];
 
 		$last_modified = filemtime($filepath);
@@ -706,8 +712,20 @@ class CI_Output {
 		$this->set_cache_header($last_modified, $expire);
 
 		// Add headers from cache file.
-		foreach ($cache_info['headers'] as $header)
+		$cache_headers = isset($cache_info['headers']) && is_array($cache_info['headers']) ? $cache_info['headers'] : array();
+
+		foreach ($cache_headers as $header)
 		{
+			if ( ! is_array($header) OR ! isset($header[0], $header[1]))
+			{
+				continue;
+			}
+
+			if ( ! is_string($header[0]) OR is_array($header[1]) OR is_object($header[1]))
+			{
+				continue;
+			}
+
 			$this->set_header($header[0], $header[1]);
 		}
 
