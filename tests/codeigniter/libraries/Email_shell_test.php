@@ -9,6 +9,8 @@ class Email_shell_test extends CI_TestCase {
 
 	public function set_up()
 	{
+		$this->ci_set_config('charset', 'utf-8');
+
 		$ci = $this->ci_instance();
 		$ci->lang = $this->getMockBuilder('CI_Lang')->setMethods(array('load', 'line'))->getMock();
 		$ci->lang->expects($this->any())->method('line')->will($this->returnValue(FALSE));
