@@ -5,27 +5,27 @@ class Image_lib_shell_test extends CI_TestCase {
 	/**
 	 * @var	string
 	 */
-	protected $sentinel;
+	protected $sentinel = '';
 
 	/**
 	 * @var	string
 	 */
-	protected $source_path;
+	protected $source_path = '';
 
 	/**
 	 * @var	string
 	 */
-	protected $dest_path;
+	protected $dest_path = '';
 
 	/**
 	 * @var	string
 	 */
-	protected $netpbm_prefix;
+	protected $netpbm_prefix = '';
 
 	/**
 	 * @var	string
 	 */
-	protected $netpbm_temp_path;
+	protected $netpbm_temp_path = '';
 
 	public function set_up()
 	{
@@ -51,7 +51,7 @@ class Image_lib_shell_test extends CI_TestCase {
 	{
 		foreach (array($this->sentinel, $this->source_path, $this->dest_path, $this->netpbm_prefix, $this->netpbm_temp_path) as $file)
 		{
-			if ($file !== NULL AND $file !== FALSE AND $file !== '' AND file_exists($file))
+			if ($file !== '' AND file_exists($file))
 			{
 				unlink($file);
 			}
@@ -76,7 +76,7 @@ class Image_lib_shell_test extends CI_TestCase {
 		$image->y_axis = 2;
 		$image->quality = 90;
 		$image->maintain_ratio = FALSE;
-		$image->image_type = 2;
+		$image->image_type = '2';
 
 		return $image;
 	}
@@ -117,7 +117,9 @@ class Image_lib_shell_test extends CI_TestCase {
 			}
 
 			$image = $this->create_image_lib('/missing-imagemagick');
-			$image->{$field} = $value;
+			$property = new ReflectionProperty($image, $field);
+			PHP_VERSION_ID < 80100 && $property->setAccessible(TRUE);
+			$property->setValue($image, $value);
 
 			$this->assertFalse($image->image_process_imagemagick('resize'), $field);
 			$this->assertFileDoesNotExist($this->sentinel);
@@ -134,7 +136,9 @@ class Image_lib_shell_test extends CI_TestCase {
 		}
 
 		$image = $this->create_image_lib('/missing-imagemagick');
-		$image->quality = '95%';
+		$property = new ReflectionProperty($image, 'quality');
+		PHP_VERSION_ID < 80100 && $property->setAccessible(TRUE);
+		$property->setValue($image, '95%');
 
 		$this->assertFalse($image->image_process_imagemagick('resize'));
 		$this->assertFileDoesNotExist($this->sentinel);
@@ -154,7 +158,7 @@ class Image_lib_shell_test extends CI_TestCase {
 		$this->netpbm_temp_path = $this->netpbm_prefix.'; touch '.$this->sentinel.'; #netpbm.tmp';
 		$image->dest_folder = $this->netpbm_prefix.'; touch '.$this->sentinel.'; #';
 		$image->rotation_angle = '123; touch '.$this->sentinel.'; #';
-		$image->image_type = 2;
+		$image->image_type = '2';
 
 		$this->assertFalse($image->image_process_netpbm('rotate'));
 		$this->assertFileDoesNotExist($this->sentinel);
@@ -173,7 +177,7 @@ class Image_lib_shell_test extends CI_TestCase {
 		$this->netpbm_prefix = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ci_netpbm_'.getmypid().'_'.mt_rand();
 		$image->dest_folder = $this->netpbm_prefix.'; touch '.$this->sentinel.'; #';
 		$this->netpbm_temp_path = $image->dest_folder.'netpbm.tmp';
-		$image->image_type = 2;
+		$image->image_type = '2';
 
 		$this->assertFalse($image->image_process_netpbm('resize'));
 		$this->assertFileDoesNotExist($this->sentinel);

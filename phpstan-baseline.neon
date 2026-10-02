@@ -5654,21 +5654,6 @@ parameters:
 			path: system/libraries/Image_lib.php
 
 		-
-			message: "#^Variable \\$angle might not be defined\\.$#"
-			count: 1
-			path: system/libraries/Image_lib.php
-
-		-
-			message: "#^Variable \\$cmd_in might not be defined\\.$#"
-			count: 1
-			path: system/libraries/Image_lib.php
-
-		-
-			message: "#^Variable \\$cmd_out might not be defined\\.$#"
-			count: 1
-			path: system/libraries/Image_lib.php
-
-		-
 			message: "#^Access to an undefined property CI_Migration\\:\\:\\$db\\.$#"
 			count: 4
 			path: system/libraries/Migration.php
