@@ -163,7 +163,7 @@ class CI_Cache_redis extends CI_Driver
 	{
 		$data = $this->_redis->hMGet($key, array('__ci_type', '__ci_value'));
 
-		if ($value !== FALSE && $this->_redis->sIsMember('_ci_redis_serialized', $key))
+		if ( ! isset($data['__ci_type'], $data['__ci_value']) OR $data['__ci_value'] === FALSE)
 		{
 			return FALSE;
 		}
@@ -221,10 +221,12 @@ class CI_Cache_redis extends CI_Driver
 		{
 			return FALSE;
 		}
-		else
+		elseif ($ttl)
 		{
-			$this->_redis->{static::$_sRemove_name}('_ci_redis_serialized', $id);
+			$this->_redis->expireAt($id, time() + $ttl);
 		}
+
+		$this->_redis->{static::$_sRemove_name}('_ci_redis_serialized', $id);
 
 		return TRUE;
 	}

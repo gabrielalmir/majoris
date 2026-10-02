@@ -137,12 +137,126 @@ class CI_DB_pdo_pgsql_driver extends CI_DB_pdo_driver {
 	{
 		if ($name === NULL && version_compare($this->version(), '8.1', '>='))
 		{
+			if (($ins_id = $this->_lastval()) !== FALSE)
+			{
+				return $ins_id;
+			}
+
 			$query = $this->query('SELECT LASTVAL() AS ins_id');
 			$query = $query->row();
 			return $query->ins_id;
 		}
 
 		return $this->conn_id->lastInsertId($name);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * LASTVAL() outside of query()
+	 *
+	 * A session that has not used a sequence yet makes LASTVAL() fail
+	 * with SQLSTATE 55000. That is reported as 0, like MySQL and SQLite
+	 * do, without going through db_debug or the transaction status.
+	 * Inside a transaction block the statement runs under a savepoint,
+	 * so that the failure does not abort the block.
+	 *
+	 * @return	int|string|bool	FALSE on any other failure, which is then left to query()
+	 */
+	protected function _lastval()
+	{
+		$savepoint = $this->_transaction_block();
+
+		if ($savepoint)
+		{
+			$result = $this->_quiet_query('SAVEPOINT ci_insert_id');
+			if ($result === FALSE OR $result[0] !== '00000')
+			{
+				return FALSE;
+			}
+		}
+
+		$lastval = $this->_quiet_query('SELECT LASTVAL()');
+
+		if ($savepoint)
+		{
+			$ends = ($lastval !== FALSE && $lastval[0] === '00000')
+				? array('RELEASE SAVEPOINT ci_insert_id')
+				: array('ROLLBACK TO SAVEPOINT ci_insert_id', 'RELEASE SAVEPOINT ci_insert_id');
+
+			foreach ($ends as $end)
+			{
+				$result = $this->_quiet_query($end);
+				if ($result === FALSE OR $result[0] !== '00000')
+				{
+					return FALSE;
+				}
+			}
+		}
+
+		if ($lastval === FALSE)
+		{
+			return FALSE;
+		}
+		elseif ($lastval[0] === '00000')
+		{
+			return $lastval[1];
+		}
+
+		return ($lastval[0] === '55000') ? 0 : FALSE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Transaction block state of the connection
+	 *
+	 * pdo_pgsql answers inTransaction() from the server state, so a block
+	 * opened with a plain BEGIN counts as well. A failed block also counts;
+	 * its SAVEPOINT is then refused and the error is left to query().
+	 *
+	 * @return	bool
+	 */
+	protected function _transaction_block()
+	{
+		/** @var PDO $conn */
+		$conn = $this->conn_id;
+		return $conn->inTransaction();
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Run a statement without query()
+	 *
+	 * The statement runs with PDO::ERRMODE_SILENT, so a failure raises
+	 * neither a warning nor an exception, and the configured mode is
+	 * restored afterwards. Nothing is logged, db_debug is not consulted
+	 * and the transaction status is left alone.
+	 *
+	 * @param	string	$sql
+	 * @return	array|bool	array(SQLSTATE, first column of the first row), FALSE if not sent
+	 */
+	protected function _quiet_query($sql)
+	{
+		/** @var PDO $conn */
+		$conn = $this->conn_id;
+
+		$errmode = $conn->getAttribute(PDO::ATTR_ERRMODE);
+		$errmode === PDO::ERRMODE_SILENT OR $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+
+		$statement = $conn->query($sql);
+		$sqlstate = $conn->errorCode();
+		$value = ($statement === FALSE) ? NULL : $statement->fetchColumn();
+
+		$errmode === PDO::ERRMODE_SILENT OR $conn->setAttribute(PDO::ATTR_ERRMODE, $errmode);
+
+		if ($statement !== FALSE)
+		{
+			return array('00000', ($value === FALSE) ? NULL : $value);
+		}
+
+		return is_string($sqlstate) ? array($sqlstate, NULL) : FALSE;
 	}
 
 	// --------------------------------------------------------------------
@@ -195,7 +309,7 @@ class CI_DB_pdo_pgsql_driver extends CI_DB_pdo_driver {
 	 */
 	public function order_by($orderby, $direction = '', $escape = NULL)
 	{
-		$direction = strtoupper(trim($direction));
+		$direction = strtoupper(trim((string) $direction));
 		if ($direction === 'RANDOM')
 		{
 			if ( ! is_float($orderby) && ctype_digit((string) $orderby))

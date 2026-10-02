@@ -85,7 +85,7 @@ class CI_DB_pdo_firebird_forge extends CI_DB_pdo_forge {
 		// Firebird databases are flat files, so a path is required
 
 		// Hostname is needed for remote access
-		empty($this->db->hostname) OR $db_name = $this->hostname.':'.$db_name;
+		empty($this->db->hostname) OR $db_name = $this->db->hostname.':'.$db_name;
 
 		return parent::create_database('"'.$db_name.'"');
 	}

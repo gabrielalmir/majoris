@@ -27,7 +27,7 @@ class Upload_test extends CI_TestCase {
 
 		$reflection = new ReflectionClass($upload);
 		$reflection = $reflection->getProperty('_file_name_override');
-		$reflection->setAccessible(TRUE);
+		PHP_VERSION_ID < 80100 && $reflection->setAccessible(TRUE);
 		$this->assertEquals('foo', $reflection->getValue($upload));
 
 		$this->assertTrue($upload->file_ext_tolower);
@@ -77,7 +77,8 @@ class Upload_test extends CI_TestCase {
 
 		foreach ($data as $k => $v)
 		{
-			$this->upload->{$k}	= $v;
+			// Some values (e.g. file_path, raw_name) are derived by data()
+			property_exists($this->upload, $k) && $this->upload->{$k} = $v;
 		}
 
 		$this->assertEquals('hello.txt', $this->upload->data('file_name'));

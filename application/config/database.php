@@ -63,6 +63,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | 				CodeIgniter will store the SQL statement for debugging purposes.
 | 				However, this may cause high memory usage, especially if you run
 | 				a lot of SQL queries ... disable this to avoid that problem.
+|	['busy_timeout'] Milliseconds to wait on a locked database ('sqlite3' and
+|				'pdo/sqlite' only). 0 (default) keeps the driver default: 'sqlite3'
+|				fails at once with "database is locked"; 'pdo/sqlite' already waits
+|				60 seconds, and 0 leaves that wait in place. 5000 is a practical
+|				value for 'sqlite3'.
+|	['wal'] TRUE/FALSE - Run PRAGMA journal_mode=WAL after connecting
+|				('sqlite3' and 'pdo/sqlite' only). FALSE (default) leaves the
+|				journal mode as it is; a file already in WAL stays in WAL.
+|	['foreign_keys'] TRUE/FALSE - Run PRAGMA foreign_keys=ON after connecting
+|				('sqlite3' and 'pdo/sqlite' only). FALSE (default) sends nothing.
 |
 | The $active_group variable lets you choose which connection group to
 | make active.  By default there is only one group (the 'default' group).

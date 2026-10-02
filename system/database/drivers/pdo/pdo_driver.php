@@ -81,7 +81,7 @@ class CI_DB_pdo_driver extends CI_DB {
 	{
 		parent::__construct($params);
 
-		if (preg_match('/([^:]+):/', $this->dsn, $match) && count($match) === 2)
+		if (preg_match('/([^:]+):/', (string) $this->dsn, $match) && count($match) === 2)
 		{
 			// If there is a minimum valid dsn string pattern found, we're done
 			// This is for general PDO users, who tend to have a full DSN string.
@@ -89,7 +89,7 @@ class CI_DB_pdo_driver extends CI_DB {
 			return;
 		}
 		// Legacy support for DSN specified in the hostname field
-		elseif (preg_match('/([^:]+):/', $this->hostname, $match) && count($match) === 2)
+		elseif (preg_match('/([^:]+):/', (string) $this->hostname, $match) && count($match) === 2)
 		{
 			$this->dsn = $this->hostname;
 			$this->hostname = NULL;
@@ -214,7 +214,11 @@ class CI_DB_pdo_driver extends CI_DB {
 	 */
 	protected function _trans_commit()
 	{
-		return $this->conn_id->commit();
+		// PDO throws an exception if there's no active transaction,
+		// e.g. after an implicit commit caused by a DDL statement
+		return $this->conn_id->inTransaction()
+			? $this->conn_id->commit()
+			: TRUE;
 	}
 
 	// --------------------------------------------------------------------
@@ -226,7 +230,9 @@ class CI_DB_pdo_driver extends CI_DB {
 	 */
 	protected function _trans_rollback()
 	{
-		return $this->conn_id->rollBack();
+		return $this->conn_id->inTransaction()
+			? $this->conn_id->rollBack()
+			: TRUE;
 	}
 
 	// --------------------------------------------------------------------

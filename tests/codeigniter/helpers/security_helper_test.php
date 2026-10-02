@@ -2,7 +2,7 @@
 
 class Security_helper_tests extends CI_TestCase {
 
-	function setUp()
+	function setUp(): void
 	{
 		$this->helper('security');
 		$obj = new stdClass;

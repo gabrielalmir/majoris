@@ -364,6 +364,24 @@ $config['encryption_key'] = '';
 |	when auto-regenerating the session ID. When set to FALSE, the data
 |	will be later deleted by the garbage collector.
 |
+| 'sess_lock_wait'
+|
+|	How many SECONDS the 'database' driver on PostgreSQL, SQLite and
+|	SQL Server waits for the session lock before failing the session read.
+|	Setting to 0 (zero), the default, waits without a limit.
+|	'sess_lock_retry_ms' sets the pause between attempts, 100 when not
+|	set; SQL Server waits on the server and doesn't use it.
+|
+| 'sess_auto_close'
+|
+|	Whether to write the session and release its lock as soon as the
+|	controller method (and the 'post_controller' hook) returns, so that
+|	other requests for the same session don't wait for the output to be
+|	sent. FALSE when not set. Views loaded by the controller can still
+|	write to the session, but changes made in a 'display_override' or
+|	'post_system' hook are NOT saved when this is TRUE.
+|	Accepts TRUE, FALSE, 1, 0, '1' or '0'.
+|
 | Other session cookie settings are shared with the rest of the application,
 | except for 'cookie_prefix' and 'cookie_httponly', which are ignored here.
 |

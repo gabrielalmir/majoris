@@ -60,7 +60,66 @@ class CI_DB_pdo_sqlsrv_driver extends CI_DB_pdo_driver {
 	 */
 	public $subdriver = 'sqlsrv';
 
+	/**
+	 * TrustServerCertificate DSN option
+	 *
+	 * Alias of the TrustServerCertificate setting; sent only when set.
+	 *
+	 * @var	mixed
+	 */
+	public $trust_server_certificate;
+
+	/**
+	 * LoginTimeout DSN option, in seconds
+	 *
+	 * Alias of the LoginTimeout setting; sent only when set and numeric.
+	 *
+	 * @var	int|string|null
+	 */
+	public $login_timeout;
+
 	// --------------------------------------------------------------------
+
+	/**
+	 * Connection settings error
+	 *
+	 * Set when the DSN can't be built from an invalid setting,
+	 * reported by error().
+	 *
+	 * @var	string|null
+	 */
+	protected $_connect_error;
+
+	/**
+	 * SCOPE_IDENTITY() read in the batch of the last INSERT
+	 *
+	 * @var	string|int|null
+	 */
+	protected $_insert_id;
+
+	/**
+	 * Statement of the last INSERT batch
+	 *
+	 * @var	PDOStatement|null
+	 */
+	protected $_insert_stmt;
+
+	/**
+	 * Rows affected by the INSERT of that batch
+	 *
+	 * @var	int
+	 */
+	protected $_insert_affected_rows = 0;
+
+	/**
+	 * Statement error of the last INSERT batch
+	 *
+	 * PDO::errorInfo() doesn't see errors raised while moving
+	 * through the rowsets of a statement.
+	 *
+	 * @var	array|null
+	 */
+	protected $_insert_error;
 
 	/**
 	 * ORDER BY random keyword
@@ -113,9 +172,13 @@ class CI_DB_pdo_sqlsrv_driver extends CI_DB_pdo_driver {
 				$this->dsn .= ';ConnectionPooling='.$this->ConnectionPooling;
 			}
 
-			if ($this->encrypt === TRUE)
+			if (($encrypt = $this->_encrypt_option()) === FALSE)
 			{
-				$this->dsn .= ';Encrypt=1';
+				$this->_connect_error = "Invalid 'encrypt' setting: expected TRUE, FALSE, 'yes', 'no', 'strict' or 'optional'.";
+			}
+			else
+			{
+				$this->dsn .= ';Encrypt='.$encrypt;
 			}
 
 			if (isset($this->TraceOn))
@@ -123,14 +186,27 @@ class CI_DB_pdo_sqlsrv_driver extends CI_DB_pdo_driver {
 				$this->dsn .= ';TraceOn='.$this->TraceOn;
 			}
 
-			if (isset($this->TrustServerCertificate))
+			if (isset($this->trust_server_certificate))
+			{
+				$this->dsn .= ';TrustServerCertificate='.(is_bool($this->trust_server_certificate) ? (int) $this->trust_server_certificate : $this->trust_server_certificate);
+			}
+			elseif (isset($this->TrustServerCertificate))
 			{
 				$this->dsn .= ';TrustServerCertificate='.$this->TrustServerCertificate;
 			}
 
 			empty($this->APP) OR $this->dsn .= ';APP='.$this->APP;
 			empty($this->Failover_Partner) OR $this->dsn .= ';Failover_Partner='.$this->Failover_Partner;
-			empty($this->LoginTimeout) OR $this->dsn .= ';LoginTimeout='.$this->LoginTimeout;
+
+			if (isset($this->login_timeout) && is_numeric($this->login_timeout))
+			{
+				$this->dsn .= ';LoginTimeout='.(int) $this->login_timeout;
+			}
+			else
+			{
+				empty($this->LoginTimeout) OR $this->dsn .= ';LoginTimeout='.$this->LoginTimeout;
+			}
+
 			empty($this->MultipleActiveResultSets) OR $this->dsn .= ';MultipleActiveResultSets='.$this->MultipleActiveResultSets;
 			empty($this->TraceFile) OR $this->dsn .= ';TraceFile='.$this->TraceFile;
 			empty($this->WSID) OR $this->dsn .= ';WSID='.$this->WSID;
@@ -147,10 +223,15 @@ class CI_DB_pdo_sqlsrv_driver extends CI_DB_pdo_driver {
 	 * Database connection
 	 *
 	 * @param	bool	$persistent
-	 * @return	object
+	 * @return	object|bool
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if (isset($this->_connect_error))
+		{
+			return FALSE;
+		}
+
 		if ( ! empty($this->char_set) && preg_match('/utf[^8]*8/i', $this->char_set))
 		{
 			$this->options[PDO::SQLSRV_ENCODING_UTF8] = 1;
@@ -170,6 +251,250 @@ class CI_DB_pdo_sqlsrv_driver extends CI_DB_pdo_driver {
 		$this->_escape_char = ($this->_quoted_identifier) ? '"' : array('[', ']');
 
 		return $this->conn_id;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Encrypt option
+	 *
+	 * Maps the 'encrypt' setting to the text value ODBC Driver 18 expects.
+	 *
+	 * @return	string|bool	'yes', 'no', 'strict' or 'optional'; FALSE if the setting is invalid
+	 */
+	protected function _encrypt_option()
+	{
+		if (is_bool($this->encrypt))
+		{
+			return $this->encrypt ? 'yes' : 'no';
+		}
+
+		if (is_string($this->encrypt))
+		{
+			$value = strtolower($this->encrypt);
+
+			if (in_array($value, array('yes', 'no', 'strict', 'optional'), TRUE))
+			{
+				return $value;
+			}
+
+			// '0', '1' and '' used to take the same path as FALSE: only boolean TRUE encrypted.
+			if ($value === '0' OR $value === '1' OR $value === '')
+			{
+				return 'no';
+			}
+
+			return FALSE;
+		}
+
+		if ($this->encrypt === NULL OR $this->encrypt === 0 OR $this->encrypt === 1)
+		{
+			return 'no';
+		}
+
+		return FALSE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Error
+	 *
+	 * Returns an array containing code and message of the last
+	 * database error that has occurred.
+	 *
+	 * @return	array
+	 */
+	public function error()
+	{
+		if (isset($this->_connect_error))
+		{
+			return array('code' => 'IMSSP', 'message' => $this->_connect_error);
+		}
+
+		if (isset($this->_insert_error[0]))
+		{
+			return array(
+				'code' => isset($this->_insert_error[1]) ? $this->_insert_error[0].'/'.$this->_insert_error[1] : $this->_insert_error[0],
+				'message' => isset($this->_insert_error[2]) ? $this->_insert_error[2] : ''
+			);
+		}
+
+		return parent::error();
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Execute the query
+	 *
+	 * @param	string	$sql	SQL query
+	 * @return	mixed
+	 */
+	protected function _execute($sql)
+	{
+		$this->_insert_error = NULL;
+
+		if (preg_match('/^\s*INSERT\s/i', $sql))
+		{
+			$this->_insert_id = NULL;
+			$this->_insert_stmt = NULL;
+
+			if (($batch = $this->_insert_id_batch($sql)) !== FALSE)
+			{
+				$stmt = FALSE;
+				if (($result = $this->_execute_insert_batch($batch)) !== FALSE)
+				{
+					list($stmt, $this->_insert_affected_rows, $this->_insert_id) = $result;
+					$this->_insert_stmt = $stmt;
+				}
+
+				return $stmt;
+			}
+		}
+
+		return parent::_execute($sql);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * INSERT batch with SCOPE_IDENTITY()
+	 *
+	 * SCOPE_IDENTITY() is NULL in any batch other than the INSERT's,
+	 * so the SELECT is appended to the INSERT itself.
+	 *
+	 * Only a single INSERT statement qualifies: one with OUTPUT already
+	 * returns a result set, INSERT ... EXEC runs a procedure, and a batch
+	 * written with more than one statement is left as the caller wrote it.
+	 *
+	 * @param	string	$sql
+	 * @return	string|bool	FALSE if $sql doesn't qualify
+	 */
+	protected function _insert_id_batch($sql)
+	{
+		// Blank out comments, and replace string literals and quoted
+		// identifiers with a placeholder of the same length, so that
+		// only keywords and statement separators are left to look at.
+		$code = preg_replace_callback(
+			'#--[^\n]*+|/\*.*?\*/|\'[^\']*+(?:\'\'[^\']*+)*+\'|"[^"]*+(?:""[^"]*+)*+"|\[[^\]]*+(?:\]\][^\]]*+)*+\]#s',
+			function ($match)
+			{
+				return str_repeat(($match[0][0] === '-' OR $match[0][0] === '/') ? ' ' : '?', strlen($match[0]));
+			},
+			$sql
+		);
+
+		if ( ! is_string($code) OR ! preg_match('/^\s*INSERT\s/i', $code))
+		{
+			return FALSE;
+		}
+
+		$code = rtrim($code);
+		if (substr($code, -1) === ';')
+		{
+			$code = rtrim(substr($code, 0, -1));
+		}
+
+		if (strpos($code, ';') !== FALSE OR preg_match('/\b(OUTPUT|EXEC|EXECUTE)\b/i', $code))
+		{
+			return FALSE;
+		}
+
+		return substr($sql, 0, strlen($code)).'; SELECT SCOPE_IDENTITY() AS insert_id';
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Execute an INSERT batch built by _insert_id_batch()
+	 *
+	 * Row counts come before the SELECT: the INSERT's, preceded by those
+	 * of any trigger that doesn't SET NOCOUNT ON. The count read last,
+	 * right before the SELECT, is the INSERT's.
+	 *
+	 * @param	string	$batch
+	 * @return	array|bool	Statement, affected rows and insert ID; FALSE on failure
+	 */
+	protected function _execute_insert_batch($batch)
+	{
+		if (($stmt = parent::_execute($batch)) === FALSE)
+		{
+			return FALSE;
+		}
+
+		$affected_rows = -1;
+		while ($stmt->columnCount() === 0)
+		{
+			$affected_rows = $stmt->rowCount();
+
+			if ( ! $stmt->nextRowset())
+			{
+				$this->_insert_error = $stmt->errorInfo();
+				return FALSE;
+			}
+		}
+
+		$insert_id = $stmt->fetchColumn();
+		if ($insert_id === FALSE && $stmt->errorCode() !== '00000')
+		{
+			$this->_insert_error = $stmt->errorInfo();
+			return FALSE;
+		}
+
+		$stmt->closeCursor();
+		return array($stmt, $affected_rows, ($insert_id === FALSE) ? NULL : $insert_id);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Affected Rows
+	 *
+	 * @return	int
+	 */
+	public function affected_rows()
+	{
+		if (isset($this->_insert_stmt) && $this->result_id === $this->_insert_stmt)
+		{
+			return $this->_insert_affected_rows;
+		}
+
+		return parent::affected_rows();
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Insert ID
+	 *
+	 * Returns the SCOPE_IDENTITY() read in the same batch as the last
+	 * INSERT. A sequence name, or an INSERT that didn't qualify for the
+	 * batch (see _insert_id_batch()), goes to PDO::lastInsertId() as before.
+	 *
+	 * @param	string	$name
+	 * @return	int
+	 */
+	public function insert_id($name = NULL)
+	{
+		if ($name === NULL && isset($this->_insert_stmt))
+		{
+			return $this->_insert_id;
+		}
+
+		return parent::insert_id($name);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Connection error message
+	 *
+	 * @return	string
+	 */
+	protected function _connect_error_message()
+	{
+		return isset($this->_connect_error) ? $this->_connect_error : '';
 	}
 
 	// --------------------------------------------------------------------
@@ -301,7 +626,7 @@ class CI_DB_pdo_sqlsrv_driver extends CI_DB_pdo_driver {
 		if (version_compare($this->version(), '11', '>='))
 		{
 			// SQL Server OFFSET-FETCH can be used only with the ORDER BY clause
-			empty($this->qb_orderby) && $sql .= ' ORDER BY 1';
+			empty($this->qb_orderby) && $sql .= ' ORDER BY (SELECT NULL)';
 
 			return $sql.' OFFSET '.(int) $this->qb_offset.' ROWS FETCH NEXT '.$this->qb_limit.' ROWS ONLY';
 		}

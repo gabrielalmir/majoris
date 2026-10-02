@@ -108,7 +108,7 @@ class CI_Typography {
 	 */
 	public function auto_typography($str, $reduce_linebreaks = FALSE)
 	{
-		if ($str === '')
+		if ($str === '' OR $str === NULL)
 		{
 			return '';
 		}
@@ -410,7 +410,7 @@ class CI_Typography {
 	public function nl2br_except_pre($str)
 	{
 		$newstr = '';
-		for ($ex = explode('pre>', $str), $ct = count($ex), $i = 0; $i < $ct; $i++)
+		for ($ex = explode('pre>', (string) $str), $ct = count($ex), $i = 0; $i < $ct; $i++)
 		{
 			$newstr .= (($i % 2) === 0) ? nl2br($ex[$i]) : $ex[$i];
 			if ($ct - 1 !== $i)

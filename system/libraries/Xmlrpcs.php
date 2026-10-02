@@ -234,7 +234,7 @@ class CI_Xmlrpcs extends CI_Xmlrpc {
 
 		$parser = xml_parser_create($this->xmlrpc_defencoding);
 		$parser_object = new XML_RPC_Message('filler');
-		$pname = (string) $parser;
+		$pname = $this->_parser_id($parser);
 
 		$parser_object->xh[$pname] = array(
 			'isf' => 0,
@@ -245,10 +245,9 @@ class CI_Xmlrpcs extends CI_Xmlrpc {
 			'method' => ''
 		);
 
-		xml_set_object($parser, $parser_object);
 		xml_parser_set_option($parser, XML_OPTION_CASE_FOLDING, TRUE);
-		xml_set_element_handler($parser, 'open_tag', 'closing_tag');
-		xml_set_character_data_handler($parser, 'character_data');
+		xml_set_element_handler($parser, array($parser_object, 'open_tag'), array($parser_object, 'closing_tag'));
+		xml_set_character_data_handler($parser, array($parser_object, 'character_data'));
 		//xml_set_default_handler($parser, 'default_handler');
 
 		//-------------------------------------
@@ -263,7 +262,7 @@ class CI_Xmlrpcs extends CI_Xmlrpc {
 				sprintf('XML error: %s at line %d',
 				xml_error_string(xml_get_error_code($parser)),
 				xml_get_current_line_number($parser)));
-			xml_parser_free($parser);
+			PHP_VERSION_ID < 80000 && xml_parser_free($parser);
 		}
 		elseif ($parser_object->xh[$pname]['isf'])
 		{
@@ -271,7 +270,7 @@ class CI_Xmlrpcs extends CI_Xmlrpc {
 		}
 		else
 		{
-			xml_parser_free($parser);
+			PHP_VERSION_ID < 80000 && xml_parser_free($parser);
 
 			$m = new XML_RPC_Message($parser_object->xh[$pname]['method']);
 			$plist = '';

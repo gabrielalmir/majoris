@@ -72,6 +72,7 @@ if ( ! function_exists('write_file'))
 
 		flock($fp, LOCK_EX);
 
+		$data = (string) $data;
 		for ($result = $written = 0, $length = strlen($data); $written < $length; $written += $result)
 		{
 			if (($result = fwrite($fp, substr($data, $written))) === FALSE)
@@ -228,7 +229,7 @@ if ( ! function_exists('get_dir_file_info'))
 				}
 				elseif ($file[0] !== '.')
 				{
-					$filedata = get_dir_file_info($source_dir.$file);
+					$filedata = get_file_info($source_dir.$file);
 					$filedata['relative_path'] = $relative_path;
 					$_filedata[] = $filedata;
 				}

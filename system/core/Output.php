@@ -124,13 +124,6 @@ class CI_Output {
 	public $parse_exec_vars = TRUE;
 
 	/**
-	 * mbstring.func_overload flag
-	 *
-	 * @var	bool
-	 */
-	protected static $func_overload;
-
-	/**
 	 * Class constructor
 	 *
 	 * Determines whether zLib output compression will be used.
@@ -145,8 +138,6 @@ class CI_Output {
 			&& config_item('compress_output') === TRUE
 			&& extension_loaded('zlib')
 		);
-
-		isset(self::$func_overload) OR self::$func_overload = ( ! is_php('8.0') && extension_loaded('mbstring') && @ini_get('mbstring.func_overload'));
 
 		// Get mime types for later
 		$this->mimes =& get_mimes();
@@ -319,9 +310,9 @@ class CI_Output {
 		// Count backwards, in order to get the last matching header
 		for ($c = count($headers) - 1; $c > -1; $c--)
 		{
-			if (strncasecmp($header, $headers[$c], $l = self::strlen($header)) === 0)
+			if (strncasecmp($header, $headers[$c], $l = strlen($header)) === 0)
 			{
-				return trim(self::substr($headers[$c], $l+1));
+				return trim(substr($headers[$c], $l+1));
 			}
 		}
 
@@ -495,13 +486,13 @@ class CI_Output {
 				if (isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== FALSE)
 				{
 					header('Content-Encoding: gzip');
-					header('Content-Length: '.self::strlen($output));
+					header('Content-Length: '.strlen($output));
 				}
 				else
 				{
 					// User agent doesn't support gzip compression,
 					// so we'll have to decompress our cache
-					$output = gzinflate(self::substr($output, 10, -8));
+					$output = gzinflate(substr($output, 10, -8));
 				}
 			}
 
@@ -559,7 +550,7 @@ class CI_Output {
 	{
 		$CI =& get_instance();
 		$path = $CI->config->item('cache_path');
-		$cache_path = ($path === '') ? APPPATH.'cache'.DIRECTORY_SEPARATOR : rtrim($path, '/\\').DIRECTORY_SEPARATOR;
+		$cache_path = empty($path) ? APPPATH.'cache'.DIRECTORY_SEPARATOR : rtrim($path, '/\\').DIRECTORY_SEPARATOR;
 
 		if ( ! is_dir($cache_path) OR ! is_really_writable($cache_path))
 		{
@@ -621,9 +612,9 @@ class CI_Output {
 
 		$output = $cache_info.'ENDCI--->'.$output;
 
-		for ($written = 0, $length = self::strlen($output); $written < $length; $written += $result)
+		for ($written = 0, $length = strlen($output); $written < $length; $written += $result)
 		{
-			if (($result = fwrite($fp, self::substr($output, $written))) === FALSE)
+			if (($result = fwrite($fp, substr($output, $written))) === FALSE)
 			{
 				break;
 			}
@@ -660,7 +651,7 @@ class CI_Output {
 	 */
 	public function _display_cache(&$CFG, &$URI)
 	{
-		$cache_path = ($CFG->item('cache_path') === '') ? APPPATH.'cache/' : $CFG->item('cache_path');
+		$cache_path = empty($CFG->item('cache_path')) ? APPPATH.'cache/' : $CFG->item('cache_path');
 
 		// Build the file path. The file name is an MD5 hash of the full URI
 		$uri = $CFG->item('base_url').$CFG->slash_item('index_page').$URI->uri_string;
@@ -721,7 +712,7 @@ class CI_Output {
 		}
 
 		// Display the cache
-		$this->_display(self::substr($cache, self::strlen($match[0])));
+		$this->_display(substr($cache, strlen($match[0])));
 		log_message('debug', 'Cache file is current. Sending it to browser.');
 		return TRUE;
 	}
@@ -738,7 +729,7 @@ class CI_Output {
 	{
 		$CI =& get_instance();
 		$cache_path = $CI->config->item('cache_path');
-		if ($cache_path === '')
+		if (empty($cache_path))
 		{
 			$cache_path = APPPATH.'cache/';
 		}
@@ -803,42 +794,5 @@ class CI_Output {
 		header('Cache-Control: max-age='.$max_age.', public');
 		header('Expires: '.gmdate('D, d M Y H:i:s', $expiration).' GMT');
 		header('Last-modified: '.gmdate('D, d M Y H:i:s', $last_modified).' GMT');
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Byte-safe strlen()
-	 *
-	 * @param	string	$str
-	 * @return	int
-	 */
-	protected static function strlen($str)
-	{
-		return (self::$func_overload)
-			? mb_strlen($str, '8bit')
-			: strlen($str);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Byte-safe substr()
-	 *
-	 * @param	string	$str
-	 * @param	int	$start
-	 * @param	int	$length
-	 * @return	string
-	 */
-	protected static function substr($str, $start, $length = NULL)
-	{
-		if (self::$func_overload)
-		{
-			return mb_substr($str, $start, $length, '8bit');
-		}
-
-		return isset($length)
-			? substr($str, $start, $length)
-			: substr($str, $start);
 	}
 }

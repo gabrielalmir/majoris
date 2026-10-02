@@ -72,7 +72,72 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 	 */
 	public $scrollable;
 
+	/**
+	 * TrustServerCertificate connection option
+	 *
+	 * Sent only when set.
+	 *
+	 * @var	mixed
+	 */
+	public $trust_server_certificate;
+
+	/**
+	 * TrustServerCertificate connection option (PDO-style name)
+	 *
+	 * @see	CI_DB_sqlsrv_driver::$trust_server_certificate
+	 * @var	mixed
+	 */
+	public $TrustServerCertificate;
+
+	/**
+	 * LoginTimeout connection option, in seconds
+	 *
+	 * Sent only when set and numeric.
+	 *
+	 * @var	int|string|null
+	 */
+	public $login_timeout;
+
+	/**
+	 * LoginTimeout connection option (PDO-style name)
+	 *
+	 * @see	CI_DB_sqlsrv_driver::$login_timeout
+	 * @var	int|string|null
+	 */
+	public $LoginTimeout;
+
 	// --------------------------------------------------------------------
+
+	/**
+	 * Connection settings error
+	 *
+	 * Set when db_connect() refuses an invalid setting,
+	 * reported by error().
+	 *
+	 * @var	string|null
+	 */
+	protected $_connect_error;
+
+	/**
+	 * SCOPE_IDENTITY() read in the batch of the last INSERT
+	 *
+	 * @var	string|int|null
+	 */
+	protected $_insert_id;
+
+	/**
+	 * Statement of the last INSERT batch
+	 *
+	 * @var	resource|null
+	 */
+	protected $_insert_stmt;
+
+	/**
+	 * Rows affected by the INSERT of that batch
+	 *
+	 * @var	int|bool
+	 */
+	protected $_insert_affected_rows = FALSE;
 
 	/**
 	 * ORDER BY random keyword
@@ -118,10 +183,47 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 	 * Database connection
 	 *
 	 * @param	bool	$pooling
-	 * @return	resource
+	 * @return	resource|bool
 	 */
 	public function db_connect($pooling = FALSE)
 	{
+		$this->_connect_error = NULL;
+
+		if (($connection = $this->_connection_options($pooling)) === FALSE)
+		{
+			return FALSE;
+		}
+
+		if (FALSE !== ($this->conn_id = sqlsrv_connect($this->_connection_hostname(), $connection)))
+		{
+			// Determine how identifiers are escaped
+			$query = $this->query('SELECT CASE WHEN (@@OPTIONS | 256) = @@OPTIONS THEN 1 ELSE 0 END AS qi');
+			$query = $query->row_array();
+			$this->_quoted_identifier = empty($query) ? FALSE : (bool) $query['qi'];
+			$this->_escape_char = ($this->_quoted_identifier) ? '"' : array('[', ']');
+		}
+
+		return $this->conn_id;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Connection options
+	 *
+	 * Builds the options array passed to sqlsrv_connect().
+	 *
+	 * @param	bool	$pooling
+	 * @return	array|bool	FALSE if a setting is invalid
+	 */
+	protected function _connection_options($pooling = FALSE)
+	{
+		if (($encrypt = $this->_encrypt_option()) === FALSE)
+		{
+			$this->_connect_error = "Invalid 'encrypt' setting: expected TRUE, FALSE, 'yes', 'no', 'strict' or 'optional'.";
+			return FALSE;
+		}
+
 		$charset = in_array(strtolower($this->char_set), array('utf-8', 'utf8'), TRUE)
 			? 'UTF-8' : SQLSRV_ENC_CHAR;
 
@@ -131,7 +233,7 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 			'Database'		=> $this->database,
 			'ConnectionPooling'	=> ($pooling === TRUE) ? 1 : 0,
 			'CharacterSet'		=> $charset,
-			'Encrypt'		=> ($this->encrypt === TRUE) ? 1 : 0,
+			'Encrypt'		=> $encrypt,
 			'ReturnDatesAsStrings'	=> 1
 		);
 
@@ -142,16 +244,86 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 			unset($connection['UID'], $connection['PWD']);
 		}
 
-		if (FALSE !== ($this->conn_id = sqlsrv_connect($this->hostname, $connection)))
+		if (isset($this->trust_server_certificate))
 		{
-			// Determine how identifiers are escaped
-			$query = $this->query('SELECT CASE WHEN (@@OPTIONS | 256) = @@OPTIONS THEN 1 ELSE 0 END AS qi');
-			$query = $query->row_array();
-			$this->_quoted_identifier = empty($query) ? FALSE : (bool) $query['qi'];
-			$this->_escape_char = ($this->_quoted_identifier) ? '"' : array('[', ']');
+			$connection['TrustServerCertificate'] = $this->trust_server_certificate;
+		}
+		elseif (isset($this->TrustServerCertificate))
+		{
+			$connection['TrustServerCertificate'] = $this->TrustServerCertificate;
 		}
 
-		return $this->conn_id;
+		if (isset($this->login_timeout) && is_numeric($this->login_timeout))
+		{
+			$connection['LoginTimeout'] = (int) $this->login_timeout;
+		}
+		elseif (isset($this->LoginTimeout) && is_numeric($this->LoginTimeout))
+		{
+			$connection['LoginTimeout'] = (int) $this->LoginTimeout;
+		}
+
+		return $connection;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Connection hostname
+	 *
+	 * Appends the port as "host,port" unless the hostname already has one.
+	 *
+	 * @return	string
+	 */
+	protected function _connection_hostname()
+	{
+		if (empty($this->port) OR strpos((string) $this->hostname, ',') !== FALSE)
+		{
+			return $this->hostname;
+		}
+
+		return $this->hostname.','.$this->port;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Encrypt option
+	 *
+	 * Maps the 'encrypt' setting to the text value ODBC Driver 18 expects.
+	 *
+	 * @return	string|bool	'yes', 'no', 'strict' or 'optional'; FALSE if the setting is invalid
+	 */
+	protected function _encrypt_option()
+	{
+		if (is_bool($this->encrypt))
+		{
+			return $this->encrypt ? 'yes' : 'no';
+		}
+
+		if (is_string($this->encrypt))
+		{
+			$value = strtolower($this->encrypt);
+
+			if (in_array($value, array('yes', 'no', 'strict', 'optional'), TRUE))
+			{
+				return $value;
+			}
+
+			// '0', '1' and '' used to take the same path as FALSE: only boolean TRUE encrypted.
+			if ($value === '0' OR $value === '1' OR $value === '')
+			{
+				return 'no';
+			}
+
+			return FALSE;
+		}
+
+		if ($this->encrypt === NULL OR $this->encrypt === 0 OR $this->encrypt === 1)
+		{
+			return 'no';
+		}
+
+		return FALSE;
 	}
 
 	// --------------------------------------------------------------------
@@ -189,9 +361,113 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 	 */
 	protected function _execute($sql)
 	{
+		if (preg_match('/^\s*INSERT\s/i', $sql))
+		{
+			$this->_insert_id = NULL;
+			$this->_insert_stmt = NULL;
+
+			if (($batch = $this->_insert_id_batch($sql)) !== FALSE)
+			{
+				$stmt = FALSE;
+				if (($result = $this->_execute_insert_batch($batch)) !== FALSE)
+				{
+					list($stmt, $this->_insert_affected_rows, $this->_insert_id) = $result;
+					$this->_insert_stmt = $stmt;
+				}
+
+				return $stmt;
+			}
+		}
+
 		return ($this->scrollable === FALSE OR $this->is_write_type($sql))
 			? sqlsrv_query($this->conn_id, $sql)
 			: sqlsrv_query($this->conn_id, $sql, NULL, array('Scrollable' => $this->scrollable));
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * INSERT batch with SCOPE_IDENTITY()
+	 *
+	 * SCOPE_IDENTITY() is NULL in any batch other than the INSERT's,
+	 * so the SELECT is appended to the INSERT itself.
+	 *
+	 * Only a single INSERT statement qualifies: one with OUTPUT already
+	 * returns a result set, INSERT ... EXEC runs a procedure, and a batch
+	 * written with more than one statement is left as the caller wrote it.
+	 *
+	 * @param	string	$sql
+	 * @return	string|bool	FALSE if $sql doesn't qualify
+	 */
+	protected function _insert_id_batch($sql)
+	{
+		// Blank out comments, and replace string literals and quoted
+		// identifiers with a placeholder of the same length, so that
+		// only keywords and statement separators are left to look at.
+		$code = preg_replace_callback(
+			'#--[^\n]*+|/\*.*?\*/|\'[^\']*+(?:\'\'[^\']*+)*+\'|"[^"]*+(?:""[^"]*+)*+"|\[[^\]]*+(?:\]\][^\]]*+)*+\]#s',
+			function ($match)
+			{
+				return str_repeat(($match[0][0] === '-' OR $match[0][0] === '/') ? ' ' : '?', strlen($match[0]));
+			},
+			$sql
+		);
+
+		if ( ! is_string($code) OR ! preg_match('/^\s*INSERT\s/i', $code))
+		{
+			return FALSE;
+		}
+
+		$code = rtrim($code);
+		if (substr($code, -1) === ';')
+		{
+			$code = rtrim(substr($code, 0, -1));
+		}
+
+		if (strpos($code, ';') !== FALSE OR preg_match('/\b(OUTPUT|EXEC|EXECUTE)\b/i', $code))
+		{
+			return FALSE;
+		}
+
+		return substr($sql, 0, strlen($code)).'; SELECT SCOPE_IDENTITY() AS insert_id';
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Execute an INSERT batch built by _insert_id_batch()
+	 *
+	 * Row counts come before the SELECT: the INSERT's, preceded by those
+	 * of any trigger that doesn't SET NOCOUNT ON. The count read last,
+	 * right before the SELECT, is the INSERT's.
+	 *
+	 * @param	string	$batch
+	 * @return	array|bool	Statement, affected rows and insert ID; FALSE on failure
+	 */
+	protected function _execute_insert_batch($batch)
+	{
+		if (($stmt = sqlsrv_query($this->conn_id, $batch)) === FALSE)
+		{
+			return FALSE;
+		}
+
+		$affected_rows = -1;
+		while (($fields = sqlsrv_num_fields($stmt)) === 0)
+		{
+			$affected_rows = sqlsrv_rows_affected($stmt);
+
+			if (sqlsrv_next_result($stmt) !== TRUE)
+			{
+				return FALSE;
+			}
+		}
+
+		if ($fields === FALSE OR ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_NUMERIC)) === FALSE)
+		{
+			return FALSE;
+		}
+
+		return array($stmt, $affected_rows, isset($row[0]) ? $row[0] : NULL);
 	}
 
 	// --------------------------------------------------------------------
@@ -239,6 +515,11 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 	 */
 	public function affected_rows()
 	{
+		if (isset($this->_insert_stmt) && $this->result_id === $this->_insert_stmt)
+		{
+			return $this->_insert_affected_rows;
+		}
+
 		return sqlsrv_rows_affected($this->result_id);
 	}
 
@@ -247,13 +528,15 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 	/**
 	 * Insert ID
 	 *
-	 * Returns the last id created in the Identity column.
+	 * Returns the SCOPE_IDENTITY() read in the same batch as the last
+	 * INSERT. NULL if that INSERT didn't qualify for the batch
+	 * (see _insert_id_batch()), as a separate batch would get anyway.
 	 *
 	 * @return	string
 	 */
 	public function insert_id()
 	{
-		return $this->query('SELECT SCOPE_IDENTITY() AS insert_id')->row()->insert_id;
+		return $this->_insert_id;
 	}
 
 	// --------------------------------------------------------------------
@@ -297,7 +580,7 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 		if ($prefix_limit === TRUE && $this->dbprefix !== '')
 		{
 			$sql .= ' AND '.$this->escape_identifiers('name')." LIKE '".$this->escape_like_str($this->dbprefix)."%' "
-				.sprintf($this->_escape_like_str, $this->_escape_like_chr);
+				.sprintf($this->_like_escape_str, $this->_like_escape_chr);
 		}
 
 		return $sql.' ORDER BY '.$this->escape_identifiers('name');
@@ -365,6 +648,11 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 	 */
 	public function error()
 	{
+		if (isset($this->_connect_error))
+		{
+			return array('code' => 'IMSSP', 'message' => $this->_connect_error);
+		}
+
 		$error = array('code' => '00000', 'message' => '');
 		$sqlsrv_errors = sqlsrv_errors(SQLSRV_ERR_ERRORS);
 
@@ -389,6 +677,19 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 		}
 
 		return $error;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Connection error message
+	 *
+	 * @return	string
+	 */
+	protected function _connect_error_message()
+	{
+		$error = $this->error();
+		return $error['message'];
 	}
 
 	// --------------------------------------------------------------------
@@ -463,7 +764,7 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 		if (version_compare($this->version(), '11', '>='))
 		{
 			// SQL Server OFFSET-FETCH can be used only with the ORDER BY clause
-			empty($this->qb_orderby) && $sql .= ' ORDER BY 1';
+			empty($this->qb_orderby) && $sql .= ' ORDER BY (SELECT NULL)';
 
 			return $sql.' OFFSET '.(int) $this->qb_offset.' ROWS FETCH NEXT '.$this->qb_limit.' ROWS ONLY';
 		}

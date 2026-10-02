@@ -14,25 +14,3 @@ class Mock_Libraries_Session extends CI_Session {
 		$this->_tempdata_sweep();
 	}
 }
-
-/**
- * Mock cookie driver to overload cookie setting
- */
-class Mock_Libraries_Session_cookie extends CI_Session_cookie {
-	/**
-	 * Overload _setcookie to manage $_COOKIE values, since actual cookies can't be set in unit testing
-	 */
-	protected function _setcookie($name, $value = '', $expire = 0, $path = '', $domain = '', $secure = FALSE, $httponly = FALSE)
-	{
-		if (empty($value) OR $expire <= time())
-		{
-			unset($_COOKIE[$name]);
-		}
-		else
-		{
-			$_COOKIE[$name] = $value;
-		}
-	}
-}
-
-class Mock_Libraries_Session_native extends CI_Session_native {}

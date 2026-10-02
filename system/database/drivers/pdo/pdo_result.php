@@ -107,7 +107,7 @@ class CI_DB_pdo_result extends CI_DB_result {
 			// Might trigger an E_WARNING due to not all subdrivers
 			// supporting getColumnMeta()
 			$field_names[$i] = @$this->result_id->getColumnMeta($i);
-			$field_names[$i] = $field_names[$i]['name'];
+			$field_names[$i] = is_array($field_names[$i]) ? $field_names[$i]['name'] : NULL;
 		}
 
 		return $field_names;
@@ -130,7 +130,10 @@ class CI_DB_pdo_result extends CI_DB_result {
 
 			for ($i = 0, $c = $this->num_fields(); $i < $c; $i++)
 			{
-				$field = $this->result_id->getColumnMeta($i);
+				if ( ! is_array($field = $this->result_id->getColumnMeta($i)))
+				{
+					return FALSE;
+				}
 
 				$retval[$i]			= new stdClass();
 				$retval[$i]->name		= $field['name'];
@@ -143,11 +146,8 @@ class CI_DB_pdo_result extends CI_DB_result {
 		}
 		catch (Exception $e)
 		{
-			if ($this->db->db_debug)
-			{
-				return $this->db->display_error('db_unsupported_feature');
-			}
-
+			// Result objects don't have access to the driver's
+			// db_debug setting, so we can only report failure.
 			return FALSE;
 		}
 	}

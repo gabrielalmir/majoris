@@ -202,6 +202,7 @@ if ( ! function_exists('underscore'))
 	 */
 	function underscore($str)
 	{
+		$str = (string) $str;
 		return preg_replace('/[\s]+/', '_', trim(MB_ENABLED ? mb_strtolower($str) : strtolower($str)));
 	}
 }
@@ -221,6 +222,7 @@ if ( ! function_exists('humanize'))
 	 */
 	function humanize($str, $separator = '_')
 	{
+		$str = (string) $str;
 		return ucwords(preg_replace('/['.preg_quote($separator).']+/', ' ', trim(MB_ENABLED ? mb_strtolower($str) : strtolower($str))));
 	}
 }
@@ -273,17 +275,6 @@ if ( ! function_exists('word_is_countable'))
 				'wheat'
 			)
 		);
-	}
-}
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('is_countable'))
-{
-	function is_countable($word)
-	{
-		trigger_error('is_countable() is a native PHP function since version 7.3.0; use word_is_countable() instead', E_USER_WARNING);
-		return word_is_countable($word);
 	}
 }
 

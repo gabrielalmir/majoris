@@ -366,22 +366,6 @@ class CI_Input {
 			log_message('error', $name.' cookie sent with SameSite=None, but without Secure attribute.');
 		}
 
-		if ( ! is_php('7.3'))
-		{
-			$maxage = $expire - time();
-			if ($maxage < 1)
-			{
-				$maxage = 0;
-			}
-
-			$cookie_header = 'Set-Cookie: '.$prefix.$name.'='.rawurlencode($value);
-			$cookie_header .= ($expire === 0 ? '' : '; Expires='.gmdate('D, d-M-Y H:i:s T', $expire)).'; Max-Age='.$maxage;
-			$cookie_header .= '; Path='.$path.($domain !== '' ? '; Domain='.$domain : '');
-			$cookie_header .= ($secure ? '; Secure' : '').($httponly ? '; HttpOnly' : '').'; SameSite='.$samesite;
-			header($cookie_header);
-			return;
-		}
-
 		$setcookie_options = array(
 			'expires' => $expire,
 			'path' => $path,
@@ -674,8 +658,8 @@ class CI_Input {
 	public function method($upper = FALSE)
 	{
 		return ($upper)
-			? strtoupper($this->server('REQUEST_METHOD'))
-			: strtolower($this->server('REQUEST_METHOD'));
+			? strtoupper((string) $this->server('REQUEST_METHOD'))
+			: strtolower((string) $this->server('REQUEST_METHOD'));
 	}
 
 	// ------------------------------------------------------------------------

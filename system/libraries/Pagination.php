@@ -434,7 +434,7 @@ class CI_Pagination {
 
 		// Put together our base and first URLs.
 		// Note: DO NOT append to the properties as that would break successive calls
-		$base_url = trim($this->base_url);
+		$base_url = trim((string) $this->base_url);
 		$first_url = $this->first_url;
 
 		$query_string = '';
@@ -506,7 +506,7 @@ class CI_Pagination {
 			// Remove any specified prefix/suffix from the segment.
 			if ($this->prefix !== '' OR $this->suffix !== '')
 			{
-				$this->cur_page = str_replace(array($this->prefix, $this->suffix), '', $this->cur_page);
+				$this->cur_page = str_replace(array($this->prefix, $this->suffix), '', (string) $this->cur_page);
 			}
 		}
 		else

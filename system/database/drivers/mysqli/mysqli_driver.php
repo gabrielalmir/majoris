@@ -125,7 +125,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 		}
 
 		// Do we have a socket path?
-		if ($this->hostname[0] === '/')
+		if (isset($this->hostname[0]) && $this->hostname[0] === '/')
 		{
 			$hostname = NULL;
 			$port = NULL;
@@ -227,7 +227,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 			{
 				log_message('error', "Database: Unable to set the configured connection charset ('{$this->char_set}').");
 				$this->_mysqli->close();
-				return ($this->db->db_debug) ? $this->display_error('db_unable_to_set_charset', $this->char_set) : FALSE;
+				return ($this->db_debug) ? $this->display_error('db_unable_to_set_charset', $this->char_set) : FALSE;
 			}
 
 			return $this->_mysqli;
@@ -248,9 +248,19 @@ class CI_DB_mysqli_driver extends CI_DB {
 	 */
 	public function reconnect()
 	{
-		if ($this->conn_id !== FALSE && $this->conn_id->ping() === FALSE)
+		if ($this->conn_id === FALSE)
+		{
+			return;
+		}
+
+		// mysqli::ping() is deprecated as of PHP 8.4
+		if (($result = @$this->conn_id->query('SELECT 1')) === FALSE)
 		{
 			$this->conn_id = FALSE;
+		}
+		elseif ($result instanceof mysqli_result)
+		{
+			$result->free();
 		}
 	}
 
@@ -341,9 +351,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	protected function _trans_begin()
 	{
 		$this->conn_id->autocommit(FALSE);
-		return is_php('5.5')
-			? $this->conn_id->begin_transaction()
-			: $this->simple_query('START TRANSACTION'); // can also be BEGIN or BEGIN WORK
+		return $this->conn_id->begin_transaction();
 	}
 
 	// --------------------------------------------------------------------

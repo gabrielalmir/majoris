@@ -213,7 +213,7 @@ class CI_Form_validation {
 		}
 
 		// If the field label wasn't passed we use the field name
-		$label = ($label === '') ? $field : $label;
+		$label = ($label === '' OR $label === NULL) ? $field : $label;
 
 		$indexes = array();
 
@@ -868,7 +868,7 @@ class CI_Form_validation {
 	{
 		// Do we need to translate the field name? We look for the prefix 'lang:' to determine this
 		// If we find one, but there's no translation for the string - just return it
-		if (sscanf($fieldname, 'lang:%s', $line) === 1 && FALSE === ($fieldname = $this->CI->lang->line($line, FALSE)))
+		if (sscanf((string) $fieldname, 'lang:%s', $line) === 1 && FALSE === ($fieldname = $this->CI->lang->line($line, FALSE)))
 		{
 			return $line;
 		}
@@ -1212,17 +1212,9 @@ class CI_Form_validation {
 
 		// Apparently, FILTER_VALIDATE_URL doesn't reject digit-only names for some reason ...
 		// See https://github.com/bcit-ci/CodeIgniter/issues/5755
-		if (ctype_digit($str))
+		if (ctype_digit((string) $str))
 		{
 			return FALSE;
-		}
-
-		// PHP 7 accepts IPv6 addresses within square brackets as hostnames,
-		// but it appears that the PR that came in with https://bugs.php.net/bug.php?id=68039
-		// was never merged into a PHP 5 branch ... https://3v4l.org/8PsSN
-		if (preg_match('/^\[([^\]]+)\]/', $str, $matches) && ! is_php('7') && filter_var($matches[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== FALSE)
-		{
-			$str = 'ipv6.host'.substr($str, strlen($matches[1]) + 2);
 		}
 
 		return (filter_var('http://'.$str, FILTER_VALIDATE_URL) !== FALSE);
@@ -1303,18 +1295,6 @@ class CI_Form_validation {
 	 */
 	public function valid_mac($mac)
 	{
-		if ( ! is_php('5.5'))
-		{
-			// Most common format, with either dash or colon delimiters
-			if (preg_match('#\A[0-9a-f]{2}(?<delimiter>[:-])([0-9a-f]{2}(?P=delimiter)){4}[0-9a-f]{2}\z#i', $mac))
-			{
-				return TRUE;
-			}
-
-			// The less common format; e.g. 0123.4567.89ab
-			return (bool) preg_match('#((\A|\.)[0-9a-f]{4}){3}\z#i', $mac);
-		}
-
 		return (bool) filter_var($mac, FILTER_VALIDATE_MAC);
 	}
 
@@ -1328,7 +1308,7 @@ class CI_Form_validation {
 	 */
 	public function alpha($str)
 	{
-		return ctype_alpha($str);
+		return ctype_alpha((string) $str);
 	}
 
 	// --------------------------------------------------------------------

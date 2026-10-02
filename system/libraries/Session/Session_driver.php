@@ -78,14 +78,13 @@ abstract class CI_Session_driver {
 	/**
 	 * Success and failure return values
 	 *
-	 * Necessary due to a bug in all PHP 5 versions where return values
-	 * from userspace handlers are not handled properly. PHP 7 fixes the
-	 * bug, so we need to return different values depending on the version.
+	 * Kept for backwards compatibility with custom drivers; these used
+	 * to differ between PHP 5 and 7.
 	 *
 	 * @see	https://wiki.php.net/rfc/session.user.return-value
-	 * @var	mixed
+	 * @var	bool
 	 */
-	protected $_success, $_failure;
+	protected $_success = TRUE, $_failure = FALSE;
 
 	// ------------------------------------------------------------------------
 
@@ -98,17 +97,6 @@ abstract class CI_Session_driver {
 	public function __construct(&$params)
 	{
 		$this->_config =& $params;
-
-		if (is_php('7'))
-		{
-			$this->_success = TRUE;
-			$this->_failure = FALSE;
-		}
-		else
-		{
-			$this->_success = 0;
-			$this->_failure = -1;
-		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -116,16 +104,13 @@ abstract class CI_Session_driver {
 	/**
 	 * PHP 5.x validate ID
 	 *
-	 * Enforces session.use_strict_mode
+	 * No-op since PHP 7 enforces session.use_strict_mode by itself.
 	 *
+	 * @deprecated	3.2.0	Kept only for custom drivers that still call it
 	 * @return	void
 	 */
 	public function php5_validate_id()
 	{
-		if ($this->_success === 0 && isset($_COOKIE[$this->_config['cookie_name']]) && ! $this->validateId($_COOKIE[$this->_config['cookie_name']]))
-		{
-			unset($_COOKIE[$this->_config['cookie_name']]);
-		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -140,17 +125,6 @@ abstract class CI_Session_driver {
 	 */
 	protected function _cookie_destroy()
 	{
-		if ( ! is_php('7.3'))
-		{
-			$header = 'Set-Cookie: '.$this->_config['cookie_name'].'=';
-			$header .= '; Expires='.gmdate('D, d-M-Y H:i:s T', 1).'; Max-Age=-1';
-			$header .= '; Path='.$this->_config['cookie_path'];
-			$header .= ($this->_config['cookie_domain'] !== '' ? '; Domain='.$this->_config['cookie_domain'] : '');
-			$header .= ($this->_config['cookie_secure'] ? '; Secure' : '').'; HttpOnly; SameSite='.$this->_config['cookie_samesite'];
-			header($header);
-			return;
-		}
-
 		return setcookie(
 			$this->_config['cookie_name'],
 			'',

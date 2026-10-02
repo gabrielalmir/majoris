@@ -156,7 +156,7 @@ class CI_DB_oci8_driver extends CI_DB {
 		/* Space characters don't have any effect when actually
 		 * connecting, but can be a hassle while validating the DSN.
 		 */
-		$this->dsn = str_replace(array("\n", "\r", "\t", ' '), '', $this->dsn);
+		$this->dsn = str_replace(array("\n", "\r", "\t", ' '), '', (string) $this->dsn);
 
 		if ($this->dsn !== '')
 		{
@@ -170,14 +170,14 @@ class CI_DB_oci8_driver extends CI_DB {
 		}
 
 		// Legacy support for TNS in the hostname configuration field
-		$this->hostname = str_replace(array("\n", "\r", "\t", ' '), '', $this->hostname);
+		$this->hostname = str_replace(array("\n", "\r", "\t", ' '), '', (string) $this->hostname);
 		if (preg_match($valid_dsns['tns'], $this->hostname))
 		{
 			$this->dsn = $this->hostname;
 			return;
 		}
 		elseif ($this->hostname !== '' && strpos($this->hostname, '/') === FALSE && strpos($this->hostname, ':') === FALSE
-			&& (( ! empty($this->port) && ctype_digit($this->port)) OR $this->database !== ''))
+			&& (( ! empty($this->port) && ctype_digit((string) $this->port)) OR $this->database !== ''))
 		{
 			/* If the hostname field isn't empty, doesn't contain
 			 * ':' and/or '/' and if port and/or database aren't
@@ -187,7 +187,7 @@ class CI_DB_oci8_driver extends CI_DB {
 			 * that the database field is a service name.
 			 */
 			$this->dsn = $this->hostname
-				.(( ! empty($this->port) && ctype_digit($this->port)) ? ':'.$this->port : '')
+				.(( ! empty($this->port) && ctype_digit((string) $this->port)) ? ':'.$this->port : '')
 				.($this->database !== '' ? '/'.ltrim($this->database, '/') : '');
 
 			if (preg_match($valid_dsns['ec'], $this->dsn))
@@ -205,7 +205,7 @@ class CI_DB_oci8_driver extends CI_DB {
 			return;
 		}
 
-		$this->database = str_replace(array("\n", "\r", "\t", ' '), '', $this->database);
+		$this->database = str_replace(array("\n", "\r", "\t", ' '), '', (string) $this->database);
 		foreach ($valid_dsns as $regexp)
 		{
 			if (preg_match($regexp, $this->database))
@@ -276,7 +276,12 @@ class CI_DB_oci8_driver extends CI_DB {
 		/* Oracle must parse the query before it is run. All of the actions with
 		 * the query are based on the statement id returned by oci_parse().
 		 */
-		$this->result_id = oci_parse($this->conn_id, $sql);
+		if (($this->result_id = oci_parse($this->conn_id, $sql)) === FALSE)
+		{
+			$this->_error = oci_error($this->conn_id);
+			return FALSE;
+		}
+
 		oci_set_prefetch($this->result_id, 1000);
 		$result = oci_execute($this->result_id, $this->commit_mode);
 		$this->_error = oci_error($this->result_id);
@@ -481,7 +486,7 @@ class CI_DB_oci8_driver extends CI_DB {
 		// oci_error() returns an array that already contains
 		// 'code' and 'message' keys, but it can return false
 		// if there was no error ....
-		if (is_resource($this->conn_id))
+		if (is_resource($this->conn_id) OR is_object($this->conn_id))
 		{
 			$error = oci_error($this->conn_id);
 		}
@@ -593,7 +598,7 @@ class CI_DB_oci8_driver extends CI_DB {
 	 */
 	protected function _close()
 	{
-		if (is_resource($this->result_id))
+		if (is_resource($this->result_id) OR is_object($this->result_id))
 		{
 			oci_free_statement($this->result_id);
 		}

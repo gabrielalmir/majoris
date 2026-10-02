@@ -197,9 +197,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	if (extension_loaded('mbstring'))
 	{
 		define('MB_ENABLED', TRUE);
-		// mbstring.internal_encoding is deprecated starting with PHP 5.6
-		// and it's usage triggers E_DEPRECATED messages.
-		@ini_set('mbstring.internal_encoding', $charset);
 		// This is required for mb_convert_encoding() to strip invalid characters.
 		// That's utilized by CI_Utf8, but it's also done for consistency with iconv.
 		mb_substitute_character('none');
@@ -214,18 +211,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	if (extension_loaded('iconv'))
 	{
 		define('ICONV_ENABLED', TRUE);
-		// iconv.internal_encoding is deprecated starting with PHP 5.6
-		// and it's usage triggers E_DEPRECATED messages.
-		@ini_set('iconv.internal_encoding', $charset);
 	}
 	else
 	{
 		define('ICONV_ENABLED', FALSE);
-	}
-
-	if (is_php('5.6'))
-	{
-		ini_set('php.internal_encoding', $charset);
 	}
 
 /*
@@ -235,9 +224,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 
 	require_once(BASEPATH.'core/compat/mbstring.php');
-	require_once(BASEPATH.'core/compat/hash.php');
-	require_once(BASEPATH.'core/compat/password.php');
-	require_once(BASEPATH.'core/compat/standard.php');
 
 /*
  * ------------------------------------------------------
@@ -490,6 +476,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * ------------------------------------------------------
  */
 	$EXT->call_hook('post_controller');
+
+/*
+ * ------------------------------------------------------
+ *  Close the session, if 'sess_auto_close' is on
+ * ------------------------------------------------------
+ */
+	if (isset($CI->session) && $CI->session instanceof CI_Session && $CI->session->auto_close_enabled())
+	{
+		$CI->session->close();
+	}
 
 /*
  * ------------------------------------------------------

@@ -49,6 +49,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * @author		EllisLab Dev Team
  * @link		https://codeigniter.com/userguide3/libraries/loader.html
  */
+#[\AllowDynamicProperties]
 class CI_Loader {
 
 	// All these are set automatically. Don't mess with them.
@@ -1341,7 +1342,7 @@ class CI_Loader {
 		}
 
 		// Load any custom config file
-		if (count($autoload['config']) > 0)
+		if ( ! empty($autoload['config']) && is_array($autoload['config']))
 		{
 			foreach ($autoload['config'] as $val)
 			{

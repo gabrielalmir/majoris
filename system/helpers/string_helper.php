@@ -64,7 +64,7 @@ if ( ! function_exists('strip_slashes'))
 	{
 		if ( ! is_array($str))
 		{
-			return stripslashes($str);
+			return stripslashes((string) $str);
 		}
 
 		foreach ($str as $key => $val)
@@ -90,6 +90,7 @@ if ( ! function_exists('strip_quotes'))
 	 */
 	function strip_quotes($str)
 	{
+		isset($str) OR $str = '';
 		return str_replace(array('"', "'"), '', $str);
 	}
 }
@@ -108,6 +109,7 @@ if ( ! function_exists('quotes_to_entities'))
 	 */
 	function quotes_to_entities($str)
 	{
+		isset($str) OR $str = '';
 		return str_replace(array("\'","\"","'",'"'), array("&#39;","&quot;","&#39;","&quot;"), $str);
 	}
 }
@@ -133,6 +135,7 @@ if ( ! function_exists('reduce_double_slashes'))
 	 */
 	function reduce_double_slashes($str)
 	{
+		isset($str) OR $str = '';
 		return preg_replace('#(^|[^:])//+#', '\\1/', $str);
 	}
 }
@@ -159,6 +162,7 @@ if ( ! function_exists('reduce_multiples'))
 	 */
 	function reduce_multiples($str, $character = ',', $trim = FALSE)
 	{
+		isset($str) OR $str = '';
 		$str = preg_replace('#'.preg_quote($character, '#').'{2,}#', $character, $str);
 		return ($trim === TRUE) ? trim($str, $character) : $str;
 	}

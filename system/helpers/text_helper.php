@@ -64,7 +64,7 @@ if ( ! function_exists('word_limiter'))
 	 */
 	function word_limiter($str, $limit = 100, $end_char = '&#8230;')
 	{
-		if (trim($str) === '')
+		if (trim((string) $str) === '')
 		{
 			return $str;
 		}
@@ -97,7 +97,7 @@ if ( ! function_exists('character_limiter'))
 	 */
 	function character_limiter($str, $n = 500, $end_char = '&#8230;')
 	{
-		if (mb_strlen($str) < $n)
+		if (mb_strlen((string) $str) < $n)
 		{
 			return $str;
 		}
@@ -139,9 +139,7 @@ if ( ! function_exists('ascii_to_entities'))
 	function ascii_to_entities($str)
 	{
 		$out = '';
-		$length = defined('MB_OVERLOAD_STRING')
-			? mb_strlen($str, '8bit') - 1
-			: strlen($str) - 1;
+		$length = strlen((string) $str) - 1;
 		for ($i = 0, $count = 1, $temp = array(); $i <= $length; $i++)
 		{
 			$ordinal = ord($str[$i]);
@@ -206,11 +204,12 @@ if ( ! function_exists('entities_to_ascii'))
 	 */
 	function entities_to_ascii($str, $all = TRUE)
 	{
+		$str = (string) $str;
 		if (preg_match_all('/\&#(\d+)\;/', $str, $matches))
 		{
 			for ($i = 0, $s = count($matches[0]); $i < $s; $i++)
 			{
-				$digits = $matches[1][$i];
+				$digits = (int) $matches[1][$i];
 				$out = '';
 
 				if ($digits < 128)
@@ -222,11 +221,23 @@ if ( ! function_exists('entities_to_ascii'))
 				{
 					$out .= chr(192 + (($digits - ($digits % 64)) / 64)).chr(128 + ($digits % 64));
 				}
-				else
+				elseif ($digits < 65536)
 				{
 					$out .= chr(224 + (($digits - ($digits % 4096)) / 4096))
 						.chr(128 + ((($digits % 4096) - ($digits % 64)) / 64))
 						.chr(128 + ($digits % 64));
+				}
+				elseif ($digits <= 0x10FFFF)
+				{
+					$out .= chr(240 + ($digits >> 18))
+						.chr(128 + (($digits >> 12) & 63))
+						.chr(128 + (($digits >> 6) & 63))
+						.chr(128 + ($digits & 63));
+				}
+				else
+				{
+					// Not a valid Unicode code point; leave it as is
+					continue;
 				}
 
 				$str = str_replace($matches[0][$i], $out, $str);
@@ -340,15 +351,18 @@ if ( ! function_exists('highlight_code'))
 		$str = highlight_string('<?php '.$str.' ?>', TRUE);
 
 		// Remove our artificially added PHP, and the syntax highlighting that came with it
+		// Note: PHP 8.3 changed the output to <pre><code>, without newlines and &nbsp;
 		$str = preg_replace(
 			array(
 				'/<span style="color: #([A-Z0-9]+)">&lt;\?php(&nbsp;| )/i',
 				'/(<span style="color: #[A-Z0-9]+">.*?)\?&gt;<\/span>\n<\/span>\n<\/code>/is',
+				'/(<span style="color: #[A-Z0-9]+">.*?)\?&gt;<\/span><\/code><\/pre>/is',
 				'/<span style="color: #[A-Z0-9]+"\><\/span>/i'
 			),
 			array(
 				'<span style="color: #$1">',
 				"$1</span>\n</span>\n</code>",
+				'$1</span></code></pre>',
 				''
 			),
 			$str
@@ -380,7 +394,7 @@ if ( ! function_exists('highlight_phrase'))
 	 */
 	function highlight_phrase($str, $phrase, $tag_open = '<mark>', $tag_close = '</mark>')
 	{
-		return ($str !== '' && $phrase !== '')
+		return ((string) $str !== '' && (string) $phrase !== '')
 			? preg_replace('/('.preg_quote($phrase, '/').')/i'.(UTF8_ENABLED ? 'u' : ''), $tag_open.'\\1'.$tag_close, $str)
 			: $str;
 	}
@@ -449,7 +463,7 @@ if ( ! function_exists('word_wrap'))
 		is_numeric($charlim) OR $charlim = 76;
 
 		// Reduce multiple spaces
-		$str = preg_replace('| +|', ' ', $str);
+		$str = preg_replace('| +|', ' ', (string) $str);
 
 		// Standardize newlines
 		if (strpos($str, "\r") !== FALSE)
@@ -543,7 +557,7 @@ if ( ! function_exists('ellipsize'))
 	function ellipsize($str, $max_length, $position = 1, $ellipsis = '&hellip;')
 	{
 		// Strip tags
-		$str = trim(strip_tags($str));
+		$str = trim(strip_tags((string) $str));
 
 		// Is the string long enough to ellipsize?
 		if (mb_strlen($str) <= $max_length)

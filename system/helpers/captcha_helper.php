@@ -134,7 +134,7 @@ if ( ! function_exists('create_captcha'))
 			$current_dir = @opendir($img_path);
 			while ($filename = @readdir($current_dir))
 			{
-				if (preg_match('#^(?<ts>\d{10})\.png$#', $filename, $match) && ($match['ts'] + $expiration) < $now)
+				if (preg_match('#^(?<ts>\d{10})(?:\.\d+)?\.png$#', $filename, $match) && ($match['ts'] + $expiration) < $now)
 				{
 					@unlink($img_path.$filename);
 				}
@@ -259,7 +259,7 @@ if ( ! function_exists('create_captcha'))
 		// -----------------------------------
 		$length	= strlen($word);
 		$angle	= ($length >= 6) ? mt_rand(-($length - 6), ($length - 6)) : 0;
-		$x_axis	= mt_rand(6, (360 / $length)-16);
+		$x_axis	= mt_rand(6, (int) ((360 / $length) - 16));
 		$y_axis = ($angle >= 0) ? mt_rand($img_height, $img_width) : mt_rand(6, $img_height);
 
 		// Create image
@@ -315,13 +315,13 @@ if ( ! function_exists('create_captcha'))
 		if ($use_font === FALSE)
 		{
 			($font_size > 5) && $font_size = 5;
-			$x = mt_rand(0, $img_width / ($length / 3));
+			$x = mt_rand(0, (int) ($img_width / ($length / 3)));
 			$y = 0;
 		}
 		else
 		{
 			($font_size > 30) && $font_size = 30;
-			$x = mt_rand(0, $img_width / ($length / 1.5));
+			$x = mt_rand(0, (int) ($img_width / ($length / 1.5)));
 			$y = $font_size + 2;
 		}
 
@@ -329,13 +329,13 @@ if ( ! function_exists('create_captcha'))
 		{
 			if ($use_font === FALSE)
 			{
-				$y = mt_rand(0 , $img_height / 2);
+				$y = mt_rand(0 , (int) ($img_height / 2));
 				imagestring($im, $font_size, $x, $y, $word[$i], $colors['text']);
 				$x += ($font_size * 2);
 			}
 			else
 			{
-				$y = mt_rand($img_height / 2, $img_height - 3);
+				$y = mt_rand((int) ($img_height / 2), $img_height - 3);
 				imagettftext($im, $font_size, $angle, $x, $y, $colors['text'], $font_path, $word[$i]);
 				$x += $font_size;
 			}
@@ -375,7 +375,7 @@ if ( ! function_exists('create_captcha'))
 		$img_class = (bool) strlen($img_class) ? 'class="'.$img_class.'" ' : '';
 
 		$img = '<img '.($img_id === '' ? '' : 'id="'.$img_id.'"').' src="'.$img_src.'" style="width: '.$img_width.'px; height: '.$img_height .'px; border: 0;" '.$img_class.'alt="'.$img_alt.'" />';
-		ImageDestroy($im);
+		PHP_VERSION_ID < 80000 && imagedestroy($im);
 
 		return array('word' => $word, 'time' => $now, 'image' => $img, 'filename' => $img_filename);
 	}

@@ -65,6 +65,7 @@ if ( ! function_exists('element'))
 	 */
 	function element($item, array $array, $default = NULL)
 	{
+		isset($item) OR $item = '';
 		return array_key_exists($item, $array) ? $array[$item] : $default;
 	}
 }
@@ -108,6 +109,7 @@ if ( ! function_exists('elements'))
 
 		foreach ($items as $item)
 		{
+			isset($item) OR $item = '';
 			$return[$item] = array_key_exists($item, $array) ? $array[$item] : $default;
 		}
 

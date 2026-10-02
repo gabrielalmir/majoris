@@ -117,7 +117,7 @@ function &DB($params = '')
 		}
 
 		$params = array(
-			'dbdriver'	=> $dsn['scheme'],
+			'dbdriver'	=> isset($dsn['scheme']) ? $dsn['scheme'] : '',
 			'hostname'	=> isset($dsn['host']) ? rawurldecode($dsn['host']) : '',
 			'port'		=> isset($dsn['port']) ? rawurldecode($dsn['port']) : '',
 			'username'	=> isset($dsn['user']) ? rawurldecode($dsn['user']) : '',
@@ -161,6 +161,12 @@ function &DB($params = '')
 		 * @see	CI_DB_driver
 		 */
 		class CI_DB extends CI_DB_query_builder {}
+	}
+
+	if (in_array($params['dbdriver'], array('mysql', 'mssql'), TRUE))
+	{
+		show_error('The '.$params['dbdriver'].' extension was removed in PHP 7; use the '
+			.($params['dbdriver'] === 'mysql' ? 'mysqli' : 'sqlsrv').' database driver instead.');
 	}
 
 	// Load the DB driver

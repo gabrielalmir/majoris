@@ -1,0 +1,12 @@
+includes:
+	- phpstan-baseline.neon
+
+parameters:
+	phpVersion: 70400
+	level: 5
+	paths:
+		- system
+		- tests
+	excludePaths:
+		- vendor
+		- system/libraries/Session/PHP8SessionWrapper.php

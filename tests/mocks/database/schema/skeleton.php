@@ -76,7 +76,7 @@ class Mock_Database_Schema_Skeleton {
 			)
 		));
 		self::$forge->add_key('id', TRUE);
-		self::$forge->create_table('user', TRUE) OR show_error('Unable to create the `user` table');
+		self::$forge->create_table('user', TRUE) OR show_error('Unable to create the `user` table: '.self::$db->error()['message'].' ('.self::$db->error()['code'].')');
 
 		// Job Table
 		self::$forge->add_field(array(
@@ -93,7 +93,7 @@ class Mock_Database_Schema_Skeleton {
 			)
 		));
 		self::$forge->add_key('id', TRUE);
-		self::$forge->create_table('job', TRUE) OR show_error('Unable to create the `job` table');
+		self::$forge->create_table('job', TRUE) OR show_error('Unable to create the `job` table: '.self::$db->error()['message'].' ('.self::$db->error()['code'].')');
 
 		// Misc Table
 		self::$forge->add_field(array(
@@ -110,7 +110,7 @@ class Mock_Database_Schema_Skeleton {
 			)
 		));
 		self::$forge->add_key('id', TRUE);
-		self::$forge->create_table('misc', TRUE) OR show_error('Unable to create the `misc` table');
+		self::$forge->create_table('misc', TRUE) OR show_error('Unable to create the `misc` table: '.self::$db->error()['message'].' ('.self::$db->error()['code'].')');
 	}
 
 	/**

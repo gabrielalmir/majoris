@@ -73,7 +73,9 @@ class CI_Exceptions {
 		E_USER_ERROR		=>	'User Error',
 		E_USER_WARNING		=>	'User Warning',
 		E_USER_NOTICE		=>	'User Notice',
-		E_STRICT		=>	'Runtime Notice'
+		E_RECOVERABLE_ERROR	=>	'Recoverable Error',
+		E_DEPRECATED		=>	'Deprecated',
+		E_USER_DEPRECATED	=>	'User Deprecated'
 	);
 
 	/**

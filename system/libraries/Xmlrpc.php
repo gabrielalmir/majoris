@@ -553,6 +553,24 @@ class CI_Xmlrpc {
 		return new XML_RPC_Response($this->values_parsing($response));
 	}
 
+	// --------------------------------------------------------------------
+
+	/**
+	 * XML parser ID
+	 *
+	 * Returns a unique key for an XML parser, which is a resource
+	 * prior to PHP 8.0 and an XMLParser object as of it.
+	 *
+	 * @param	resource|XMLParser	$parser
+	 * @return	int
+	 */
+	protected function _parser_id($parser)
+	{
+		return is_resource($parser)
+			? (int) $parser
+			: spl_object_id($parser);
+	}
+
 } // END XML_RPC Class
 
 /**
@@ -1129,7 +1147,7 @@ class XML_RPC_Message extends CI_Xmlrpc
 		// Display HTTP content for debugging
 		if ($this->debug === TRUE)
 		{
-			echo "<pre>---DATA---\n".htmlspecialchars($data)."\n---END DATA---\n\n</pre>";
+			echo "<pre>---DATA---\n".htmlspecialchars($data, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401)."\n---END DATA---\n\n</pre>";
 		}
 
 		// Check for data
@@ -1151,7 +1169,7 @@ class XML_RPC_Message extends CI_Xmlrpc
 		//-------------------------------------
 
 		$parser = xml_parser_create($this->xmlrpc_defencoding);
-		$pname = (string) $parser;
+		$pname = $this->_parser_id($parser);
 		$this->xh[$pname] = array(
 			'isf'		=> 0,
 			'ac'		=> '',
@@ -1161,10 +1179,9 @@ class XML_RPC_Message extends CI_Xmlrpc
 			'isf_reason'	=> 0
 		);
 
-		xml_set_object($parser, $this);
 		xml_parser_set_option($parser, XML_OPTION_CASE_FOLDING, TRUE);
-		xml_set_element_handler($parser, 'open_tag', 'closing_tag');
-		xml_set_character_data_handler($parser, 'character_data');
+		xml_set_element_handler($parser, array($this, 'open_tag'), array($this, 'closing_tag'));
+		xml_set_character_data_handler($parser, array($this, 'character_data'));
 		//xml_set_default_handler($parser, 'default_handler');
 
 		// Get headers
@@ -1187,10 +1204,10 @@ class XML_RPC_Message extends CI_Xmlrpc
 						xml_get_current_line_number($parser));
 
 			$r = new XML_RPC_Response(0, $this->xmlrpcerr['invalid_return'], $this->xmlrpcstr['invalid_return']);
-			xml_parser_free($parser);
+			PHP_VERSION_ID < 80000 && xml_parser_free($parser);
 			return $r;
 		}
-		xml_parser_free($parser);
+		PHP_VERSION_ID < 80000 && xml_parser_free($parser);
 
 		// Got ourselves some badness, it seems
 		if ($this->xh[$pname]['isf'] > 1)
@@ -1222,7 +1239,7 @@ class XML_RPC_Message extends CI_Xmlrpc
 				echo "---END HEADERS---\n\n";
 			}
 
-			echo "---DATA---\n".htmlspecialchars($data)."\n---END DATA---\n\n---PARSED---\n";
+			echo "---DATA---\n".htmlspecialchars($data, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401)."\n---END DATA---\n\n---PARSED---\n";
 			var_dump($this->xh[$pname]['value']);
 			echo "\n---END PARSED---</pre>";
 		}
@@ -1279,7 +1296,7 @@ class XML_RPC_Message extends CI_Xmlrpc
 	 */
 	public function open_tag($the_parser, $name)
 	{
-		$the_parser = (string) $the_parser;
+		$the_parser = $this->_parser_id($the_parser);
 
 		// If invalid nesting, then return
 		if ($this->xh[$the_parser]['isf'] > 1) return;
@@ -1380,7 +1397,7 @@ class XML_RPC_Message extends CI_Xmlrpc
 	 */
 	public function closing_tag($the_parser, $name)
 	{
-		$the_parser = (string) $the_parser;
+		$the_parser = $this->_parser_id($the_parser);
 
 		if ($this->xh[$the_parser]['isf'] > 1) return;
 
@@ -1514,7 +1531,7 @@ class XML_RPC_Message extends CI_Xmlrpc
 	 */
 	public function character_data($the_parser, $data)
 	{
-		$the_parser = (string) $the_parser;
+		$the_parser = $this->_parser_id($the_parser);
 
 		if ($this->xh[$the_parser]['isf'] > 1) return; // XML Fault found already
 
@@ -1849,7 +1866,7 @@ class XML_RPC_Values extends CI_Xmlrpc
 						$rs .= '<'.$typ.'>'.( (bool) $val ? '1' : '0').'</'.$typ.">\n";
 						break;
 					case $this->xmlrpcString:
-						$rs .= '<'.$typ.'>'.htmlspecialchars( (string) $val).'</'.$typ.">\n";
+						$rs .= '<'.$typ.'>'.htmlspecialchars( (string) $val, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401).'</'.$typ.">\n";
 						break;
 					default:
 						$rs .= '<'.$typ.'>'.$val.'</'.$typ.">\n";
