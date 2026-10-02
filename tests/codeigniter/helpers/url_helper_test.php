@@ -115,6 +115,23 @@ class Url_helper_test extends CI_TestCase {
 		$this->expectException('RuntimeException');
 		$this->expectExceptionMessage('CI Error: The redirect URI is not allowed.');
 
+		redirect("https://example.com/\nfoo");
+	}
+
+	// --------------------------------------------------------------------
+
+	public function test_redirect_rejects_line_breaks_after_site_url()
+	{
+		$this->ci_set_config(array(
+			'base_url' => 'http://example.com/',
+			'index_page' => '',
+			'enable_query_strings' => FALSE,
+			'url_suffix' => ''
+		));
+
+		$this->expectException('RuntimeException');
+		$this->expectExceptionMessage('CI Error: The redirect URI is not allowed.');
+
 		redirect("foo\nbar");
 	}
 }

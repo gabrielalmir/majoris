@@ -513,7 +513,7 @@ if ( ! function_exists('redirect_header_uri'))
 	 * Returns FALSE when the URI contains CR or LF.
 	 *
 	 * @param	string	$uri	URL
-	 * @return	string
+	 * @return	string|FALSE
 	 */
 	function redirect_header_uri($uri)
 	{
