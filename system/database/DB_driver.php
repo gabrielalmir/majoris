@@ -1468,24 +1468,23 @@ abstract class CI_DB_driver {
 			return $item;
 		}
 
-		static $preg_ec;
-
-		if (empty($preg_ec))
+		// No static caching here: since PHP 8.1, static variables in
+		// inherited methods are shared by the whole class hierarchy, so
+		// drivers using different escape characters in the same process
+		// would poison each other's cache
+		if (is_array($this->_escape_char))
 		{
-			if (is_array($this->_escape_char))
-			{
-				$preg_ec = array(
-					preg_quote($this->_escape_char[0]),
-					preg_quote($this->_escape_char[1]),
-					$this->_escape_char[0],
-					$this->_escape_char[1]
-				);
-			}
-			else
-			{
-				$preg_ec[0] = $preg_ec[1] = preg_quote($this->_escape_char);
-				$preg_ec[2] = $preg_ec[3] = $this->_escape_char;
-			}
+			$preg_ec = array(
+				preg_quote($this->_escape_char[0]),
+				preg_quote($this->_escape_char[1]),
+				$this->_escape_char[0],
+				$this->_escape_char[1]
+			);
+		}
+		else
+		{
+			$preg_ec[0] = $preg_ec[1] = preg_quote($this->_escape_char);
+			$preg_ec[2] = $preg_ec[3] = $this->_escape_char;
 		}
 
 		foreach ($this->_reserved_identifiers as $id)

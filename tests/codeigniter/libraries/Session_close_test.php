@@ -100,6 +100,12 @@ if (isset($args['settings']))
 	}
 
 	echo json_encode($results)."\n";
+	fflush(STDOUT);
+
+	// Wait for the parent's 'exit' instead of terminating right away:
+	// finish_child() writes to our STDIN, and a self-exited child makes
+	// that write fail with EPIPE on PHP 7.4
+	fgets(STDIN);
 	exit;
 }
 
