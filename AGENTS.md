@@ -13,4 +13,5 @@ A norma completa está em `CLAUDE.md`. Leia esse arquivo e o `MAJORIS.md` antes 
 - `is_write_type()` não trata `EXEC` nem `WITH` como escrita. Cursor padrão do `sqlsrv` continua buffered. `save_queries` continua `TRUE`.
 - Teste de outro motor dá `markTestSkipped` quando `DB_DRIVER` não é o dele. `composer check` verde antes de entregar.
 - Autor de commit, PR e código é o usuário git ativo (`git config user.name` / `user.email`). Sem `Co-authored-by`, sem `GIT_AUTHOR_*`, sem nome de modelo, sem id de sessão em commit, PR, cabeçalho ou comentário.
+- Mensagem de commit segue Conventional Commits: `feat`, `fix`, `docs`, `chore`, `test`, `refactor` e afins. Sem mensagem solta.
 - Não edite `CLAUDE.md` nem `AGENTS.md`. Não faça commit nem push por conta própria.
