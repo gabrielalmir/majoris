@@ -2,6 +2,11 @@
 
 class Upload_mime_test extends CI_TestCase {
 
+	/**
+	 * @var	CI_Upload
+	 */
+	public $upload;
+
 	public function set_up()
 	{
 		$ci = $this->ci_instance();
