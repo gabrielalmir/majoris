@@ -1,51 +1,17 @@
-# CodeIgniter Unit Tests #
+# Testes do Majoris
 
-Status : [![Build Status](https://secure.travis-ci.org/bcit-ci/CodeIgniter.png?branch=develop)](https://travis-ci.org/bcit-ci/CodeIgniter)
+A suíte cobre o `system/` compatível com o CodeIgniter 3. Os nomes de classe no harness continuam `CI_*`.
 
-### Introduction:
+PHP 7.4 a 8.5. Dependências de desenvolvimento vêm do Composer, não do PEAR.
 
-This is the preliminary CodeIgniter testing documentation. It
-will cover both internal as well as external APIs and the reasoning
-behind their implementation, where appropriate. As with all CodeIgniter
-documentation, this file should maintain a mostly human readable
-format to facilitate clean api design. [see https://arrenbrecht.ch/testing/]
+```bash
+composer install
+composer check
+```
 
-*First public draft: everything is subject to change*
+`composer check` roda PHP_CodeSniffer, PHPStan e PHPUnit em `tests/travis/sqlite.phpunit.xml`. A Action testa PHP 7.4 e 8.5. Teste de um motor dá `markTestSkipped` quando `DB_DRIVER` não é o dele.
 
-### Requirements
-
-PHP Unit >= 3.5.6
-
-	pear channel-discover pear.phpunit.de
-	pear channel-discover pear.symfony.com
-	pear install phpunit/PHPUnit
-
-vfsStream
-
-	pear channel-discover pear.bovigo.org
-	pear install bovigo/vfsStream-beta
-
-#### Installation of PEAR and PHPUnit on Ubuntu
-
-  Installation on Ubuntu requires a few steps. Depending on your setup you may
-  need to use 'sudo' to install these. Mileage may vary but these steps are a
-  good start.
-
-	# Install the PEAR package
-	sudo apt-get install php-pear
-
-	# Add a few sources to PEAR
-	pear channel-discover pear.phpunit.de
-	pear channel-discover pear.symfony-project.com
-	pear channel-discover components.ez.no
-	pear channel-discover pear.bovigo.org
-
-	# Finally install PHPUnit and vfsStream (including dependencies)
-	pear install --alldeps phpunit/PHPUnit
-	pear install --alldeps bovigo/vfsStream-beta
-
-	# Finally, run 'phpunit' from within the ./tests directory
-	# and you should be on your way!
+O texto abaixo é a referência do harness (`CI_TestCase`, vfsStream). O comando de instalação por PEAR não vale mais.
 
 ## Test Suites:
 

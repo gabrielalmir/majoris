@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# CodeIgniter documentation build configuration file, created by
+# Majoris documentation build configuration file, created by
 # sphinx-quickstart on Sun Aug 28 07:24:38 2011.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'CodeIgniter'
+project = u'Majoris'
 copyright = u'2019 - 2022, CodeIgniter Foundation'
 
 # The version info for the project you're documenting, acts as replacement for

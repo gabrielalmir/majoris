@@ -1,6 +1,6 @@
-########################
-CodeIgniter 3 User Guide
-########################
+##################
+Majoris User Guide
+##################
 
 - :doc:`License Agreement <license>`
 - :doc:`Change Log <changelog>`
@@ -9,15 +9,26 @@ CodeIgniter 3 User Guide
    :local:
    :depth: 2
 
-*************
-CodeIgniter 3
-*************
+*******
+Majoris
+*******
 
-CodeIgniter 3 is the legacy version of the framework, intended for use with PHP
-5.6+. This version is in maintenance, receiving mostly just security updates.
+Majoris is a drop-in base of CodeIgniter 3 for applications that stay on the
+CI3 model. It is not the upstream CodeIgniter 3 project and it is not
+CodeIgniter 4.
 
-`CodeIgniter 4 <https://codeigniter.com/user_guide/>`_ is the latest version of
-the framework.
+Replace the application ``system/`` directory, or point ``$system_path`` in
+``index.php`` at this tree, and keep the existing ``application/``. Public
+``CI_*`` signatures, helpers, existing config keys and the hook order do not
+change. ``system/core/CodeIgniter.php`` remains the bootstrap.
+
+PHP 7.4 through 8.5. The reference pages below still use the CodeIgniter 3
+names, because that is the API the application already calls.
+
+Scope and status are in the repository file ``MAJORIS.md``. The upstream
+CodeIgniter 3 manual remains at
+`codeigniter.com/userguide3 <https://codeigniter.com/userguide3/>`_ and is not
+this project.
 
 *******
 Welcome
@@ -64,9 +75,9 @@ Tutorial
 
 	tutorial/index
 
-***************************
-Contributing to CodeIgniter
-***************************
+***********************
+Contributing to Majoris
+***********************
 
 .. toctree::
 	:glob:

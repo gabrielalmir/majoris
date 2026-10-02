@@ -2,8 +2,9 @@
 Design and Architectural Goals
 ##############################
 
-Our goal for CodeIgniter is maximum performance, capability, and
-flexibility in the smallest, lightest possible package.
+These are the architectural goals inherited from CodeIgniter 3 and
+kept by Majoris: maximum performance, capability, and flexibility in
+the smallest, lightest possible package.
 
 To meet this goal we are committed to benchmarking, re-factoring, and
 simplifying at every step of the development process, rejecting anything

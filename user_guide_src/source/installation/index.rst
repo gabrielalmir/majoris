@@ -2,10 +2,14 @@
 Installation Instructions
 #########################
 
-CodeIgniter is installed in four steps:
+Majoris uses the CodeIgniter 3 install path. For an application that
+already runs, replace ``system/`` or point ``$system_path`` at this tree
+and leave ``application/`` in place.
+
+A new install is four steps:
 
 #. Unzip the package.
-#. Upload the CodeIgniter folders and files to your server. Normally the
+#. Upload the Majoris folders and files to your server. Normally the
    *index.php* file will be at your root.
 #. Open the *application/config/config.php* file with a text editor and
    set your base URL. If you intend to use encryption or sessions, set
@@ -42,7 +46,7 @@ page <../general/security>`.
 
 That's it!
 
-If you're new to CodeIgniter, please read the :doc:`Getting
+If you're new to Majoris, please read the :doc:`Getting
 Started <../overview/getting_started>` section of the User Guide
 to begin learning how to build dynamic PHP applications. Enjoy!
 

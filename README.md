@@ -38,7 +38,7 @@ composer check
 
 `composer check` roda PHP_CodeSniffer, PHPStan e PHPUnit em `tests/travis/sqlite.phpunit.xml`. A Action testa PHP 7.4 e 8.5 com MySQL, PostgreSQL e SQLite.
 
-O guia de contribuição deste fork ainda é o arquivo legado [`contributing.md`](contributing.md). O comportamento esperado das frentes de banco e sessão está em [`MAJORIS.md`](MAJORIS.md).
+Como contribuir está em [`contributing.md`](contributing.md). O comportamento esperado das frentes de banco e sessão está em [`MAJORIS.md`](MAJORIS.md).
 
 ## Licença
 

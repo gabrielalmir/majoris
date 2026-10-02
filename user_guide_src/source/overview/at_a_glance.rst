@@ -1,24 +1,25 @@
-#######################
-CodeIgniter at a Glance
-#######################
+###################
+Majoris at a Glance
+###################
 
-CodeIgniter is an Application Framework
-=======================================
+Majoris is a Drop-in of CodeIgniter 3
+=====================================
 
-CodeIgniter is a toolkit for people who build web applications using
-PHP. Its goal is to enable you to develop projects much faster than you
-could if you were writing code from scratch, by providing a rich set of
-libraries for commonly needed tasks, as well as a simple interface and
-logical structure to access these libraries. CodeIgniter lets you
-creatively focus on your project by minimizing the amount of code needed
-for a given task.
+Majoris is the toolkit an existing CI3 application already calls. It is
+not a new framework and it does not rename ``CI_*`` classes. The goal of
+this repository is to keep that model running on PHP 7.4 through 8.5,
+with the database and session work described in ``MAJORIS.md``.
 
-CodeIgniter is Free
-===================
+Majoris is Free
+===============
 
-CodeIgniter is licensed under the MIT license so you can use it however
+Majoris is licensed under the MIT license so you can use it however
 you please. For more information please read the
-:doc:`license agreement <../license>`.
+:doc:`license agreement <../license>`. The copyright notice remains with
+the CodeIgniter Foundation.
+
+The sections below describe the CI3 model this tree keeps. They are not
+a claim that this repository is the upstream CodeIgniter project.
 
 CodeIgniter is Light Weight
 ===========================
@@ -107,8 +108,9 @@ different, of course, but since documentation is **as important** as the
 code itself, we are committed to doing it. Our source code is extremely
 clean and well commented as well.
 
-CodeIgniter has a Friendly Community of Users
-=============================================
+Upstream CodeIgniter has its own community
+==========================================
 
-Our growing community of users can be seen actively participating in our
-`Community Forums <https://forum.codeigniter.com/>`_.
+The CodeIgniter forums are the upstream project, not support for this
+repository. Issues for Majoris go to
+`gabrielalmir/majoris <https://github.com/gabrielalmir/majoris>`_.
